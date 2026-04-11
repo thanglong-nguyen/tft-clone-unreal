@@ -1,6 +1,8 @@
 #include "Units/Unit.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "AIController.h"
+#include "Components/CapsuleComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 
 AUnit::AUnit()
 {
@@ -8,11 +10,19 @@ AUnit::AUnit()
 
     // AI controller so we can use MoveToLocation
     AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+    
+    GetMesh()->SetupAttachment(GetCapsuleComponent());
+    GetMesh()->SetRelativeLocation(FVector(0.f, 0.f, -90.f));
+    GetMesh()->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
 }
 
 void AUnit::BeginPlay()
 {
     Super::BeginPlay();
+    if (DataAsset)
+    {
+        InitFromDataAsset();
+    }
     CurrentHP = MaxHP;
 }
 
@@ -25,20 +35,23 @@ void AUnit::InitFromDataAsset()
 {
     if (!DataAsset) return;
 
-    UnitName    = DataAsset->UnitName;
-    Cost        = DataAsset->Cost;
-    MaxHP       = DataAsset->BaseHP;
-    CurrentHP   = DataAsset->BaseHP;
-    AttackDamage= DataAsset->BaseAttack;
-    Armor       = DataAsset->BaseArmor;
-    AttackRange = DataAsset->AttackRange;
-    AttackSpeed = DataAsset->AttackSpeed;
+    UnitName     = DataAsset->UnitName;
+    Cost         = DataAsset->Cost;
+    MaxHP        = DataAsset->BaseHP;
+    CurrentHP    = DataAsset->BaseHP;
+    AttackDamage = DataAsset->BaseAttack;
+    Armor        = DataAsset->BaseArmor;
+    AttackRange  = DataAsset->AttackRange;
+    AttackSpeed  = DataAsset->AttackSpeed;
 
     GetCharacterMovement()->MaxWalkSpeed = DataAsset->MoveSpeed;
 
-    if (DataAsset->Mesh)
+    // Apply mesh from data asset at runtime
+    if (DataAsset->Mesh && GetMesh())
     {
         GetMesh()->SetSkeletalMesh(DataAsset->Mesh);
+        GetMesh()->SetRelativeLocation(FVector(0.f, 0.f, -90.f));
+        GetMesh()->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
     }
 }
 
