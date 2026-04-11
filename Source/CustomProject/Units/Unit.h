@@ -65,7 +65,7 @@ public:
     TObjectPtr<AUnit> CurrentTarget;
 
     // --- Combat ---
-    void TakeDamage(float RawDamage);
+    void ApplyDamage(float RawDamage);
     void FindAndSetTarget(const TArray<AUnit*>& EnemyUnits);
     void MoveToTarget();
     void TryAttack();

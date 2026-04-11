@@ -37,10 +37,23 @@ public:
 	UPROPERTY(EditAnywhere, Category="Stats")
 	float MoveSpeed = 300.f;
 
-	// --- Traits ---
-	// e.g. "Trait.Warrior", "Trait.Mage"
+	// --- Identity Tags ---
+	// A unit has exactly one race
 	UPROPERTY(EditAnywhere, Category="Traits")
-	FGameplayTagContainer Traits;
+	FGameplayTag Race; // e.g. Race.Elf
+
+	// A unit has exactly one class
+	UPROPERTY(EditAnywhere, Category="Traits")
+	FGameplayTag Class; // e.g. Class.Warrior
+	
+	// Helper — returns both tags together for trait counting
+	FGameplayTagContainer GetAllTraitTags() const
+	{
+		FGameplayTagContainer Tags;
+		Tags.AddTag(Race);
+		Tags.AddTag(Class);
+		return Tags;
+	}
 
 	// --- Visuals ---
 	UPROPERTY(EditAnywhere, Category="Visuals")

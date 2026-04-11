@@ -121,12 +121,12 @@ void AUnit::TryAttack()
 
     if (CurrentTarget && !CurrentTarget->IsDead())
     {
-        CurrentTarget->TakeDamage(AttackDamage);
+        CurrentTarget->ApplyDamage(AttackDamage);
         AttackCooldown = 1.f / AttackSpeed; // reset cooldown
     }
 }
 
-void AUnit::TakeDamage(float RawDamage)
+void AUnit::ApplyDamage(float RawDamage)
 {
     if (IsDead()) return;
 
