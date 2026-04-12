@@ -1,9 +1,9 @@
-#include "Player/TATFTPlayerState.h"
+#include "Player/TFTPlayerState.h"
 #include "Units/Unit.h"
 
 ATFTPlayerState::ATFTPlayerState()
 {
-    // Start with 0 XP, level 1, 1 board slot
+    PlayerLevel = 3;
 }
 
 void ATFTPlayerState::AddXP(int32 Amount)

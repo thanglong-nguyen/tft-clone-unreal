@@ -2,7 +2,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
 #include "Units/Unit.h"
-#include "TATFTPlayerState.generated.h"
+#include "TFTPlayerState.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnLevelUp, int32, NewLevel, int32, BoardCapacity);
 
