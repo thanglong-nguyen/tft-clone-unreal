@@ -117,7 +117,7 @@ void AUnit::MoveToTarget()
 
     if (AAIController* AI = Cast<AAIController>(GetController()))
     {
-        AI->MoveToActor(CurrentTarget, AttackRange * 0.9f);
+        AI->MoveToActor(CurrentTarget, AttackRange * 0.5f);
     }
 }
 
@@ -125,7 +125,10 @@ bool AUnit::IsEnemyInRange() const
 {
     if (!CurrentTarget) return false;
     float DistSq = FVector::DistSquared(GetActorLocation(), CurrentTarget->GetActorLocation());
-    return DistSq <= (AttackRange * AttackRange);
+    
+    // Add 50 unit tolerance buffer
+    float RangeWithTolerance = AttackRange + 50.f;
+    return DistSq <= (RangeWithTolerance * RangeWithTolerance);
 }
 
 void AUnit::TryAttack()
@@ -146,7 +149,7 @@ void AUnit::ApplyDamage(float RawDamage)
     // Simple flat armor reduction
     float Reduced = RawDamage * (100.f / (100.f + Armor));
     CurrentHP     = FMath::Max(0.f, CurrentHP - Reduced);
-
+    
     if (CurrentHP <= 0.f)
     {
         Die();
@@ -157,6 +160,8 @@ void AUnit::Die()
 {
     CurrentState  = EUnitState::Dead;
     CurrentTarget = nullptr;
+    CurrentHP      = 0.f;
+    AttackCooldown = 999.f;
 
     if (AAIController* AI = Cast<AAIController>(GetController()))
     {
@@ -166,6 +171,6 @@ void AUnit::Die()
     // Disable collision so other units don't interact with the corpse
     SetActorEnableCollision(false);
 
-    // For now just hide it — later you'll play a death animation then destroy
-    SetActorHiddenInGame(true);
+    // Destroy after a tiny delay so the current tick finishes cleanly
+    Destroy();
 }
