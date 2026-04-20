@@ -168,9 +168,22 @@ void AUnit::Die()
         AI->StopMovement();
     }
 
-    // Disable collision so other units don't interact with the corpse
     SetActorEnableCollision(false);
+    SetActorHiddenInGame(true);
+    
+}
 
-    // Destroy after a tiny delay so the current tick finishes cleanly
-    Destroy();
+void AUnit::ResetForNewRound()
+{
+    // Reset stats from data asset
+    InitFromDataAsset();
+
+    // Reset state
+    CurrentState       = EUnitState::Idle;
+    CurrentTarget      = nullptr;
+    AttackCooldown     = 0.f;
+
+    // Make visible and collidable again
+    SetActorHiddenInGame(false);
+    SetActorEnableCollision(true);
 }

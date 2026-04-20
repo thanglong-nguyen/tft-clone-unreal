@@ -73,6 +73,8 @@ public:
     void Die();
 
     bool IsDead() const { return CurrentState == EUnitState::Dead; }
+    
+    void ResetForNewRound();
 
     // Called every frame by CombatSubsystem during combat phase
     void CombatTick(float DeltaTime);
