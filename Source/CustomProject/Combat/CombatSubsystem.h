@@ -1,18 +1,25 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "Units/Unit.h"
 #include "CombatSubsystem.generated.h"
 
+// Represents the current phase of the game loop
 UENUM(BlueprintType)
 enum class EGamePhase : uint8
 {
-    Prep,    // Player arranges units
-    Combat,  // Units fight
-    Result   // Round over, show outcome
+    Prep,    // Player arranges units on the board
+    Combat,  // Units auto-battle
+    Result   // Round over — showing outcome before next prep
 };
 
+// Fired when the game phase changes — UI listens to this
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPhaseChanged, EGamePhase, NewPhase);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRoundChanged, int32, RoundNumber);
+
+// Fired when the round number increments
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRoundChanged, int32, NewRound);
+
+// Fired when combat ends — true if player won, false if lost
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatEnded, bool, bPlayerWon);
 
 UCLASS()
@@ -23,68 +30,97 @@ class CUSTOMPROJECT_API UCombatSubsystem : public UGameInstanceSubsystem
 public:
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
-    // --- Phase Control ---
+    // -------------------------------------------------------
+    // Phase Control
+    // -------------------------------------------------------
+
+    // Begins the prep phase — resets units, starts countdown timer
     UFUNCTION(BlueprintCallable, Category="Combat")
     void StartPrepPhase();
 
+    // Begins the combat phase — starts the fight loop
     UFUNCTION(BlueprintCallable, Category="Combat")
     void StartCombatPhase();
 
-    UFUNCTION(BlueprintCallable, Category="Combat")
+    // Returns the current game phase
     EGamePhase GetCurrentPhase() const { return CurrentPhase; }
 
-    UFUNCTION(BlueprintCallable, Category="Combat")
+    // Returns the current round number
     int32 GetCurrentRound() const { return CurrentRound; }
 
-    // --- Unit Registration ---
-    // Call these when units are placed/removed from board
+    // Returns seconds remaining in the prep phase
+    float GetPrepTimeRemaining() const { return PrepTimeRemaining; }
+
+    // -------------------------------------------------------
+    // Unit Registration
+    // Called when units are placed on the board
+    // -------------------------------------------------------
+
     UFUNCTION(BlueprintCallable, Category="Combat")
     void RegisterPlayerUnit(AUnit* Unit);
 
     UFUNCTION(BlueprintCallable, Category="Combat")
-    void UnregisterPlayerUnit(AUnit* Unit);
-
-    // Enemy units — spawned automatically each round
-    UFUNCTION(BlueprintCallable, Category="Combat")
     void RegisterEnemyUnit(AUnit* Unit);
 
+    // Destroys all enemy actors and clears the enemy array
     void ClearEnemyUnits();
 
-    // --- Delegates ---
-    UPROPERTY(BlueprintAssignable)
+    // -------------------------------------------------------
+    // Config
+    // -------------------------------------------------------
+
+    // How long the prep phase lasts in seconds
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
+    float PrepDuration = 15.f;
+
+    // -------------------------------------------------------
+    // Delegates — bind to these to react to game events
+    // -------------------------------------------------------
+
+    UPROPERTY(BlueprintAssignable, Category="Combat")
     FOnPhaseChanged OnPhaseChanged;
 
-    UPROPERTY(BlueprintAssignable)
+    UPROPERTY(BlueprintAssignable, Category="Combat")
     FOnRoundChanged OnRoundChanged;
 
-    UPROPERTY(BlueprintAssignable)
+    UPROPERTY(BlueprintAssignable, Category="Combat")
     FOnCombatEnded OnCombatEnded;
 
-    // --- Prep Timer ---
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
-    float PrepDuration = 30.f; // seconds per prep phase
-
-    UFUNCTION(BlueprintCallable, Category="Combat")
-    float GetPrepTimeRemaining() const { return PrepTimeRemaining; }
-
 private:
-    EGamePhase CurrentPhase  = EGamePhase::Prep;
-    int32      CurrentRound  = 1;
-    float      PrepTimeRemaining = 0.f;
+    // -------------------------------------------------------
+    // State
+    // -------------------------------------------------------
+
+    // Current phase of the game loop
+    EGamePhase CurrentPhase;
+
+    // Which round we are on
+    int32 CurrentRound;
+
+    // Seconds remaining in prep phase
+    float PrepTimeRemaining = 0.f;
+
+    // Units currently registered for combat
+    UPROPERTY()
+    TArray<AUnit*> PlayerUnits;
 
     UPROPERTY()
-    TArray<TObjectPtr<AUnit>> PlayerUnits;
+    TArray<AUnit*> EnemyUnits;
 
-    UPROPERTY()
-    TArray<TObjectPtr<AUnit>> EnemyUnits;
+    // Timer handles — used to start/stop/clear timers
+    FTimerHandle PrepCountdown; // counts down prep phase
+    FTimerHandle CombatTick;    // drives the fight loop at 0.1s intervals
 
-    FTimerHandle PrepTimerHandle;
-    FTimerHandle CombatTickHandle;
+    // -------------------------------------------------------
+    // Internal Functions
+    // -------------------------------------------------------
 
+    // Called every 0.1s during combat — drives unit AI
     void CombatUpdate();
-    void CheckRoundEnd();
-    void EndCombat(bool bPlayerWon);
 
-    // Removes dead units from arrays
-    void CleanDeadUnits();
+    // Checks if one side has been wiped — triggers EndCombat
+    void CheckRoundEnd();
+
+    // Cleans up after combat — grants rewards, starts next prep
+    void EndCombat(bool bPlayerWon);
 };
