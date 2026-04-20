@@ -4,13 +4,15 @@
 #include "GameFramework/Character.h"
 #include "Unit.generated.h"
 
+// Represents what the unit is currently doing
+// Used by animation blueprint and combat logic
 UENUM(BlueprintType)
 enum class EUnitState : uint8
 {
-    Idle,
-    Moving,
-    Attacking,
-    Dead
+    Idle,       // Standing still, no target
+    Moving,     // Walking toward a target
+    Attacking,  // In range, dealing damage
+    Dead        // HP reached 0
 };
 
 UCLASS()
@@ -22,63 +24,108 @@ public:
     AUnit();
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
-    
+
+    // -------------------------------------------------------
+    // Data Asset
+    // Assign in editor to define this unit's stats and traits
+    // -------------------------------------------------------
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Unit")
     TObjectPtr<UUnitDataAsset> DataAsset;
-    
+
+    // Loads all stats and mesh from the assigned DataAsset
+    // Called automatically in BeginPlay and ResetForNewRound
     void InitFromDataAsset();
 
-    // --- Identity ---
+    // -------------------------------------------------------
+    // Identity
+    // -------------------------------------------------------
+
+    // Display name — matches DataAsset.UnitName
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Unit")
     FName UnitName;
 
+    // 1 = base, 2 = two copies merged, 3 = three copies merged
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Unit")
     int32 StarLevel = 1;
 
+    // Shop cost tier (1-5) — used by shop pool and rarity table
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Unit")
     int32 Cost = 1;
 
-    // --- Stats ---
+    // -------------------------------------------------------
+    // Stats
+    // Base values loaded from DataAsset, modified by traits
+    // -------------------------------------------------------
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
     float MaxHP = 500.f;
 
     UPROPERTY(BlueprintReadOnly, Category="Stats")
     float CurrentHP;
 
+    // Damage dealt per attack before armor reduction
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
     float AttackDamage = 50.f;
 
+    // Distance in cm at which this unit can attack
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
     float AttackRange = 200.f;
 
+    // How many times per second this unit attacks
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
-    float AttackSpeed = 1.0f; // attacks per second
+    float AttackSpeed = 1.0f;
 
+    // Reduces incoming damage — formula: Damage * (100 / (100 + Armor))
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
     float Armor = 20.f;
 
-    // --- State ---
+    // -------------------------------------------------------
+    // State
+    // -------------------------------------------------------
+
+    // What the unit is currently doing — read by animation BP
     UPROPERTY(BlueprintReadOnly, Category="Combat")
     EUnitState CurrentState = EUnitState::Idle;
 
+    // The unit this one is currently targeting
     UPROPERTY(BlueprintReadOnly, Category="Combat")
     TObjectPtr<AUnit> CurrentTarget;
 
-    // --- Combat ---
-    void ApplyDamage(float RawDamage);
-    void FindAndSetTarget(const TArray<AUnit*>& EnemyUnits);
-    void MoveToTarget();
-    void TryAttack();
-    bool IsEnemyInRange() const;
-    void Die();
+    // -------------------------------------------------------
+    // Combat Interface
+    // Called by CombatSubsystem each tick
+    // -------------------------------------------------------
 
-    bool IsDead() const { return CurrentState == EUnitState::Dead; }
-    
-    void ResetForNewRound();
-
-    // Called every frame by CombatSubsystem during combat phase
+    // Main combat loop — handles targeting, movement, attacking
     void CombatTick(float DeltaTime);
 
+    // Receives damage after armor reduction
+    void ApplyDamage(float RawDamage);
+
+    // Finds the nearest living unit in the given array and sets it as target
+    void FindAndSetTarget(const TArray<AUnit*>& EnemyUnits);
+
+    // Moves toward CurrentTarget using AI navigation
+    void MoveToTarget();
+
+    // Fires an attack if cooldown has expired
+    void TryAttack();
+
+    // Returns true if CurrentTarget is within attack range
+    bool IsEnemyInRange() const;
+
+    // Hides the unit and sets state to Dead
+    void Die();
+
+    // Returns true if unit state is Dead
+    bool IsDead() const { return CurrentState == EUnitState::Dead; }
+
+    // Resets HP, state and visibility for the next round
+    void ResetForNewRound();
+
 private:
-    float AttackCooldown = 0.f; // counts down to 0 before next attack
+    // Seconds remaining before this unit can attack again
+    // Counts down each CombatTick, reset to 1/AttackSpeed after each attack
+    float AttackCooldown = 0.f;
 };

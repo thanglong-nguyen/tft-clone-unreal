@@ -8,9 +8,10 @@ AUnit::AUnit()
 {
     PrimaryActorTick.bCanEverTick = true;
 
-    // AI controller so we can use MoveToLocation
+    // Spawn an AI controller automatically so we can call MoveToActor
     AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
-    
+
+    // Position the mesh inside the capsule correctly
     GetMesh()->SetupAttachment(GetCapsuleComponent());
     GetMesh()->SetRelativeLocation(FVector(0.f, 0.f, -90.f));
     GetMesh()->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
@@ -19,10 +20,14 @@ AUnit::AUnit()
 void AUnit::BeginPlay()
 {
     Super::BeginPlay();
+
+    // Load stats and mesh from the assigned data asset
     if (DataAsset)
     {
         InitFromDataAsset();
     }
+
+    // Fallback HP in case no data asset is assigned
     CurrentHP = MaxHP;
 }
 
@@ -35,6 +40,7 @@ void AUnit::InitFromDataAsset()
 {
     if (!DataAsset) return;
 
+    // Copy base stats from the data asset
     UnitName     = DataAsset->UnitName;
     Cost         = DataAsset->Cost;
     MaxHP        = DataAsset->BaseHP;
@@ -46,7 +52,7 @@ void AUnit::InitFromDataAsset()
 
     GetCharacterMovement()->MaxWalkSpeed = DataAsset->MoveSpeed;
 
-    // Apply mesh from data asset at runtime
+    // Apply the mesh defined in the data asset
     if (DataAsset->Mesh && GetMesh())
     {
         GetMesh()->SetSkeletalMesh(DataAsset->Mesh);
@@ -55,16 +61,21 @@ void AUnit::InitFromDataAsset()
     }
 }
 
+// -------------------------------------------------------
+// Combat Loop
+// -------------------------------------------------------
+
 void AUnit::CombatTick(float DeltaTime)
 {
     if (IsDead()) return;
 
-    // Tick down attack cooldown
+    // Count down attack cooldown each tick
     if (AttackCooldown > 0.f)
     {
         AttackCooldown -= DeltaTime;
     }
 
+    // If target is gone or dead, go idle and wait for retargeting
     if (!CurrentTarget || CurrentTarget->IsDead())
     {
         SetActorRotation(FRotator::ZeroRotator);
@@ -75,7 +86,7 @@ void AUnit::CombatTick(float DeltaTime)
 
     if (IsEnemyInRange())
     {
-        // Stop moving, face target, attack
+        // In range — stop moving and attack
         if (AAIController* AI = Cast<AAIController>(GetController()))
         {
             AI->StopMovement();
@@ -85,7 +96,7 @@ void AUnit::CombatTick(float DeltaTime)
     }
     else
     {
-        // Chase target
+        // Out of range — chase the target
         CurrentState = EUnitState::Moving;
         MoveToTarget();
     }
@@ -96,6 +107,7 @@ void AUnit::FindAndSetTarget(const TArray<AUnit*>& EnemyUnits)
     AUnit* Closest    = nullptr;
     float  BestDistSq = FLT_MAX;
 
+    // Find the nearest living enemy
     for (AUnit* Enemy : EnemyUnits)
     {
         if (!Enemy || Enemy->IsDead()) continue;
@@ -117,6 +129,7 @@ void AUnit::MoveToTarget()
 
     if (AAIController* AI = Cast<AAIController>(GetController()))
     {
+        // Stop slightly before reaching attack range
         AI->MoveToActor(CurrentTarget, AttackRange * 0.5f);
     }
 }
@@ -124,21 +137,29 @@ void AUnit::MoveToTarget()
 bool AUnit::IsEnemyInRange() const
 {
     if (!CurrentTarget) return false;
-    float DistSq = FVector::DistSquared(GetActorLocation(), CurrentTarget->GetActorLocation());
-    
-    // Add 50 unit tolerance buffer
+
+    float DistSq = FVector::DistSquared(
+        GetActorLocation(),
+        CurrentTarget->GetActorLocation()
+    );
+
+    // Add tolerance buffer to account for navmesh imprecision
     float RangeWithTolerance = AttackRange + 50.f;
     return DistSq <= (RangeWithTolerance * RangeWithTolerance);
 }
 
 void AUnit::TryAttack()
 {
+    // Wait for cooldown before attacking again
     if (AttackCooldown > 0.f) return;
 
     if (CurrentTarget && !CurrentTarget->IsDead())
     {
         CurrentTarget->ApplyDamage(AttackDamage);
-        AttackCooldown = 1.f / AttackSpeed; // reset cooldown
+
+        // Reset cooldown based on attack speed
+        // AttackSpeed = 1.0 → 1 attack/sec, 2.0 → 2 attacks/sec
+        AttackCooldown = 1.f / AttackSpeed;
     }
 }
 
@@ -146,10 +167,11 @@ void AUnit::ApplyDamage(float RawDamage)
 {
     if (IsDead()) return;
 
-    // Simple flat armor reduction
+    // Flat armor damage reduction formula
+    // Higher armor = less damage taken, but never 0
     float Reduced = RawDamage * (100.f / (100.f + Armor));
     CurrentHP     = FMath::Max(0.f, CurrentHP - Reduced);
-    
+
     if (CurrentHP <= 0.f)
     {
         Die();
@@ -158,32 +180,32 @@ void AUnit::ApplyDamage(float RawDamage)
 
 void AUnit::Die()
 {
-    CurrentState  = EUnitState::Dead;
-    CurrentTarget = nullptr;
+    CurrentState   = EUnitState::Dead;
+    CurrentTarget  = nullptr;
     CurrentHP      = 0.f;
-    AttackCooldown = 999.f;
+    AttackCooldown = 999.f; // prevent any pending attacks from firing
 
     if (AAIController* AI = Cast<AAIController>(GetController()))
     {
         AI->StopMovement();
     }
 
+    // Hide the unit — it stays in memory for potential respawn next round
     SetActorEnableCollision(false);
     SetActorHiddenInGame(true);
-    
 }
 
 void AUnit::ResetForNewRound()
 {
-    // Reset stats from data asset
+    // Restore base stats from data asset (clears any leftover damage)
     InitFromDataAsset();
 
-    // Reset state
-    CurrentState       = EUnitState::Idle;
-    CurrentTarget      = nullptr;
-    AttackCooldown     = 0.f;
+    // Reset combat state
+    CurrentState   = EUnitState::Idle;
+    CurrentTarget  = nullptr;
+    AttackCooldown = 0.f;
 
-    // Make visible and collidable again
+    // Make the unit visible and collidable again
     SetActorHiddenInGame(false);
     SetActorEnableCollision(true);
 }
