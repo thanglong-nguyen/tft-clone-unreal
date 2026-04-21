@@ -1,158 +1,159 @@
 #include "Traits/TraitSubsystem.h"
 #include "Traits/TraitDataAsset.h"
+#include "Traits/TraitDefinition.h"
 #include "Units/Unit.h"
 #include "Units/UnitDataAsset.h"
 
-void UTraitSubsystem::RecalculateTraits(const TArray<AUnit*>& BoardUnits)
-{
-    if (!TraitData) 
-    {
-        UE_LOG(LogTemp, Warning, TEXT("TraitSubsystem: No TraitData asset assigned!"));
-        return;
-    }
-
-    // Strip old buffs before recalculating
-    StripAllTraitBuffs(BoardUnits);
-
-    // Recount from scratch
-    TraitCounts.Empty();
-    CountTraits(BoardUnits);
-
-    // Apply new buffs based on fresh counts
-    ApplyTraitBuffs(BoardUnits);
-
-    // Tell UI something changed
-    OnTraitsUpdated.Broadcast();
-}
-
-void UTraitSubsystem::CountTraits(const TArray<AUnit*>& BoardUnits)
-{
-    // Track which unit NAMES we've already counted
-    // so duplicates don't contribute extra trait counts
-    TSet<FName> CountedUnitNames;
-
-    for (AUnit* Unit : BoardUnits)
-    {
-        if (!Unit || Unit->IsDead() || !Unit->DataAsset) continue;
-
-        FName UnitName = Unit->DataAsset->UnitName;
-
-        // Skip if we already counted a unit with this name
-        if (CountedUnitNames.Contains(UnitName)) continue;
-        CountedUnitNames.Add(UnitName);
-
-        // Count race
-        FGameplayTag RaceTag = Unit->DataAsset->Race;
-        if (RaceTag.IsValid())
-        {
-            int32& Count = TraitCounts.FindOrAdd(RaceTag);
-            Count++;
-        }
-
-        // Count class
-        FGameplayTag ClassTag = Unit->DataAsset->Class;
-        if (ClassTag.IsValid())
-        {
-            int32& Count = TraitCounts.FindOrAdd(ClassTag);
-            Count++;
-        }
-    }
-}
 
 void UTraitSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
     Super::Initialize(Collection);
 
-    // Auto load DA_Traits on startup
     TraitData = Cast<UTraitDataAsset>(StaticLoadObject(
         UTraitDataAsset::StaticClass(),
         nullptr,
-        TEXT("/Script/CustomProject.TraitDataAsset'/Game/DA_Traits.DA_Traits'")
-    ));
+        TEXT("/Game/DA_Traits.DA_Traits")
+));
 
     if (TraitData)
-        UE_LOG(LogTemp, Log, TEXT("TraitSubsystem: DA_Traits loaded successfully"))
+        UE_LOG(LogTemp, Log, TEXT("TraitSubsystem: DA_Traits loaded"))
     else
-        UE_LOG(LogTemp, Error, TEXT("TraitSubsystem: Could not find DA_Traits — check the path"));
-}   
+        UE_LOG(LogTemp, Error, TEXT("TraitSubsystem: DA_Traits not found — check path"))
+}
+
+void UTraitSubsystem::RecalculateTraits(const TArray<AUnit*>& BoardUnits)
+{
+
+    if (!TraitData)
+    {
+        return;
+    }
+    
+    StripTraitBuffs(BoardUnits); 
+
+    TraitCounts.Empty();
+
+    CountTraits(BoardUnits);
+    
+    ApplyTraitBuffs(BoardUnits);
+    
+    OnTraitsUpdated.Broadcast();
+}
+
+void UTraitSubsystem::CountTraits(const TArray<AUnit*>& BoardUnits)
+{
+    
+    TSet<FName> CountedNames;
+    
+    for (AUnit* Unit : BoardUnits)
+    {
+        if (!Unit || Unit->IsDead() || CountedNames.Contains(Unit->UnitName))
+        {
+            continue;
+        }
+        CountedNames.Add(Unit->UnitName);
+        
+        if (!Unit->DataAsset) continue; // add this check
+
+        FGameplayTag RaceTag = Unit->DataAsset->Race;
+        FGameplayTag ClassTag = Unit->DataAsset->Class;
+
+        TraitCounts.FindOrAdd(RaceTag)++;
+        TraitCounts.FindOrAdd(ClassTag)++;
+    }
+    
+    
+}
 
 void UTraitSubsystem::ApplyTraitBuffs(const TArray<AUnit*>& BoardUnits)
 {
-    for (auto& Pair : TraitCounts)
+    
+    for (auto& Trait : TraitCounts)
     {
-        FGameplayTag Tag       = Pair.Key;
-        int32        Count     = Pair.Value;
-
-        const FTraitDefinition* Def = TraitData->FindTrait(Tag);
-        if (!Def) continue;
-
-        const FTraitTier* ActiveTier = Def->GetActiveTier(Count);
-        if (!ActiveTier) continue; // threshold not met
-
-        // Apply buff to every board unit that has this trait
+        FGameplayTag Tag = Trait.Key;
+        int32 Count = Trait.Value;
+        const FTraitDefinition* TraitDef = TraitData->FindTrait(Tag);
+        if (!TraitDef) continue;
+        
+        const FTraitTier* Tier = TraitDef->GetActiveTier(Count);
+        
+        if (Tier == nullptr)
+        {
+            continue;
+        }
+        
         for (AUnit* Unit : BoardUnits)
         {
-            if (!Unit || Unit->IsDead() || !Unit->DataAsset) continue;
-
-            FGameplayTagContainer UnitTags = Unit->DataAsset->GetAllTraitTags();
-            if (!UnitTags.HasTag(Tag)) continue;
-
-            // Apply the tier bonuses on top of base stats
-            Unit->MaxHP        += ActiveTier->BonusHP;
-            Unit->CurrentHP    += ActiveTier->BonusHP;
-            Unit->AttackDamage += ActiveTier->BonusAttack;
-            Unit->Armor        += ActiveTier->BonusArmor;
-            Unit->AttackSpeed  += ActiveTier->BonusAttackSpeed;
-
-            UE_LOG(LogTemp, Log, TEXT("Applied %s buff to %s"), 
-                *Tag.ToString(), *Unit->UnitName.ToString());
+            if (!Unit || !Unit->DataAsset) continue;
+            if (Unit->DataAsset->GetAllTraitTags().HasTag(Tag))
+            {
+                Unit->MaxHP += Tier->BonusHP;
+                Unit->Armor += Tier->BonusArmor;
+                Unit->AttackDamage += Tier->BonusAttack;
+                Unit->AttackSpeed += Tier->BonusAttackSpeed;
+            }
         }
     }
 }
 
-void UTraitSubsystem::StripAllTraitBuffs(const TArray<AUnit*>& BoardUnits)
+void UTraitSubsystem::StripTraitBuffs(const TArray<AUnit*>& BoardUnits)
 {
-    // Easiest approach — just reinitialise from data asset
-    // This resets stats to base, then buffs get reapplied fresh
+    
     for (AUnit* Unit : BoardUnits)
     {
-        if (!Unit || !Unit->DataAsset) continue;
-        Unit->InitFromDataAsset();
+        if (Unit) Unit->InitFromDataAsset();
     }
 }
 
 int32 UTraitSubsystem::GetTraitCount(FGameplayTag TraitTag) const
 {
+    
     const int32* Count = TraitCounts.Find(TraitTag);
     return Count ? *Count : 0;
 }
 
 TArray<FActiveTraitStatus> UTraitSubsystem::GetAllTraitStatuses() const
 {
+    // TODO: Return early with empty array if TraitData is null
+    
     TArray<FActiveTraitStatus> Result;
-    if (!TraitData) return Result;
-
-    for (const FTraitDefinition& Def : TraitData->Traits)
+    
+    if (!TraitData)
     {
-        FActiveTraitStatus Status;
-        Status.TraitTag    = Def.TraitTag;
-        Status.DisplayName = Def.DisplayName;
-        Status.CurrentCount= GetTraitCount(Def.TraitTag);
-        Status.bIsActive   = Def.GetActiveTier(Status.CurrentCount) != nullptr;
-
-        // Find next threshold
-        Status.NextThreshold = 0;
-        for (const FTraitTier& Tier : Def.Tiers)
-        {
-            if (Tier.RequiredCount > Status.CurrentCount)
-            {
-                Status.NextThreshold = Tier.RequiredCount;
-                break;
-            }
-        }
-
-        Result.Add(Status);
+        return Result;
     }
 
+    // TODO: Loop through all trait definitions in TraitData->Traits
+    //   → Create an FActiveTraitStatus for each
+    //   → Set TraitTag, DisplayName, CurrentCount
+    //   → Set bIsActive based on whether GetActiveTier returns non-null
+    //   → Set NextThreshold by finding the first tier above CurrentCount
+    //   → Add to result array
+    
+    for (const FTraitDefinition& TraitDef: TraitData->Traits)
+    {
+        FActiveTraitStatus Status;
+        Status.TraitTag = TraitDef.TraitTag;
+        Status.DisplayName  = TraitDef.DisplayName; 
+        Status.CurrentCount = GetTraitCount(TraitDef.TraitTag);
+        
+        const FTraitTier* Tier = TraitDef.GetActiveTier(Status.CurrentCount);
+        
+        Status.bIsActive = (Tier != nullptr);
+        Status.NextThreshold = 0;
+        
+        for (const FTraitTier& ATier :TraitDef.Tiers)
+        {
+            if (Status.CurrentCount < ATier.RequiredCount)
+            {
+                Status.NextThreshold  = ATier.RequiredCount;
+                break;
+            } 
+        }
+        
+        Result.Add(Status);
+    }
+    
     return Result;
 }
+
