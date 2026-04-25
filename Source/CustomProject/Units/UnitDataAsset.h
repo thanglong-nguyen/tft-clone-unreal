@@ -5,18 +5,14 @@
 #include "GameplayTagContainer.h"
 #include "UnitDataAsset.generated.h"
 
-UCLASS()
-class CUSTOMPROJECT_API UUnitDataAsset : public UPrimaryDataAsset
+
+USTRUCT(BlueprintType)
+struct FUnitStarTier
 {
 	GENERATED_BODY()
 
-public:
-	// --- Identity ---
-	UPROPERTY(EditAnywhere, Category="Identity")
-	FName UnitName;
-
-	UPROPERTY(EditAnywhere, Category="Identity")
-	int32 Cost = 1; // 1-5 like TFT
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int32 StarLevel = 1;
 
 	// --- Stats ---
 	UPROPERTY(EditAnywhere, Category="Stats")
@@ -34,9 +30,40 @@ public:
 	UPROPERTY(EditAnywhere, Category="Stats")
 	float AttackSpeed = 1.0f;
 
+	
+};
+
+UCLASS()
+class CUSTOMPROJECT_API UUnitDataAsset : public UPrimaryDataAsset
+{
+	GENERATED_BODY()
+
+public:
+	// --- Identity ---
+	UPROPERTY(EditAnywhere, Category="Identity")
+	FName UnitName;
+
+	UPROPERTY(EditAnywhere, Category="Identity")
+	int32 Cost = 1; // 1-5 like TFT
+	
 	UPROPERTY(EditAnywhere, Category="Stats")
 	float MoveSpeed = 300.f;
-
+	
+	// Stats for each star level — index 0 = 1 star, index 1 = 2 star etc
+	UPROPERTY(EditAnywhere, Category="StarLevels")
+	TArray<FUnitStarTier> StarTiers;
+	
+	// Helper — returns stats for a given star level
+	const FUnitStarTier* GetStarTier(int32 StarLevel) const
+	{
+		for (const FUnitStarTier& Tier : StarTiers)
+		{
+			if (Tier.StarLevel == StarLevel)
+				return &Tier;
+		}
+		return nullptr;
+	}
+	
 	// --- Identity Tags ---
 	// A unit has exactly one race
 	UPROPERTY(EditAnywhere, Category="Traits")

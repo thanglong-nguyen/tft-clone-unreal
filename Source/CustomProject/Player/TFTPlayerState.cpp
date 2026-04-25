@@ -128,3 +128,91 @@ bool ATFTPlayerState::SpendGold(int32 Amount)
     Gold -= Amount;
     return true;
 }
+
+void ATFTPlayerState::CheckForMerge(FName UnitName)
+{
+    // TODO: Find all copies of this unit across board and bench
+    // HINT: Call FindAllCopies
+    
+    TArray<AUnit*> Copies1 = FindAllCopies(UnitName);
+    
+    TArray<AUnit*> OneStars = Copies1.FilterByPredicate([](AUnit* Unit)
+    {
+        return Unit && Unit->StarLevel == 1; 
+    });
+    
+    if (OneStars.Num()>=3)
+    {
+        MergeUnits(OneStars);
+    }
+    
+    TArray<AUnit*> Copies2 = FindAllCopies(UnitName);
+    
+    TArray<AUnit*> TwoStars = Copies2.FilterByPredicate([](AUnit* Unit)
+    {
+        return Unit && Unit->StarLevel == 2; 
+    });
+    
+    if (TwoStars.Num()>=3)
+    {
+        MergeUnits(TwoStars);
+    }
+    
+}
+
+TArray<AUnit*> ATFTPlayerState::FindAllCopies(FName UnitName)
+{
+    TArray<AUnit*> Copies;
+    
+    
+    for (AUnit* Unit: BoardUnits)
+    {
+        if (Unit && Unit->UnitName == UnitName)
+        {
+            Copies.Add(Unit);
+        }
+    }
+    
+    for (AUnit* Unit: BenchUnits)
+    {
+        if (Unit && Unit->UnitName == UnitName)
+        {
+            Copies.Add(Unit);
+        }
+    }
+
+    return Copies;
+}
+
+void ATFTPlayerState::MergeUnits(TArray<AUnit*>& Copies)
+{
+    
+    
+    while (Copies.Num() >= 3)
+    {
+        AUnit* Merged = Copies[0];
+        AUnit* ToRemove1 = Copies[1];
+        AUnit* ToRemove2 = Copies[2];
+        
+        BoardUnits.Remove(ToRemove1);
+        BenchUnits.Remove(ToRemove1);
+        ToRemove1->Destroy();
+        
+        BoardUnits.Remove(ToRemove2);
+        BenchUnits.Remove(ToRemove2);
+        ToRemove2->Destroy();
+        
+        Copies.RemoveAt(2);
+        Copies.RemoveAt(1);
+        Copies.RemoveAt(0);
+    
+        Merged->StarLevel++;
+        
+        Merged->InitFromDataAsset();
+
+        UE_LOG(LogTemp, Log, TEXT("%s merged to %d star"),
+            *Merged->UnitName.ToString(), Merged->StarLevel);
+    }
+    
+
+}

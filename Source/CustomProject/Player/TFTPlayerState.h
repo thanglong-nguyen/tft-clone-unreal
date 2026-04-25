@@ -68,6 +68,10 @@ public:
 
     // Moves a unit from board to bench
     void MoveToBench(AUnit* Unit);
+    
+    // Checks if 3 copies of a unit exist across board and bench
+    // Call this after any unit is added to board or bench
+    void CheckForMerge(FName UnitName);
 
     // -------------------------------------------------------
     // Gold
@@ -100,4 +104,10 @@ private:
     // Checks if accumulated XP meets the next level threshold
     // Called automatically by AddXP — not called directly
     void CheckLevelUp();
+    
+    // Finds all units with a matching name across board and bench
+    TArray<AUnit*> FindAllCopies(FName UnitName);
+
+    // Performs the actual merge — upgrades one unit to next star level
+    void MergeUnits(TArray<AUnit*>& Copies);
 };

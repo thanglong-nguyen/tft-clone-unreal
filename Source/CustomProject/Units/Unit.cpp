@@ -43,12 +43,17 @@ void AUnit::InitFromDataAsset()
     // Copy base stats from the data asset
     UnitName     = DataAsset->UnitName;
     Cost         = DataAsset->Cost;
-    MaxHP        = DataAsset->BaseHP;
-    CurrentHP    = DataAsset->BaseHP;
-    AttackDamage = DataAsset->BaseAttack;
-    Armor        = DataAsset->BaseArmor;
-    AttackRange  = DataAsset->AttackRange;
-    AttackSpeed  = DataAsset->AttackSpeed;
+    
+    const FUnitStarTier* Tier = DataAsset->GetStarTier(StarLevel);
+    if (!Tier) Tier = DataAsset->GetStarTier(1); 
+    if (!Tier) return; 
+    
+    MaxHP        = Tier->BaseHP;
+    CurrentHP    = Tier->BaseHP;
+    AttackDamage = Tier->BaseAttack;
+    Armor        = Tier->BaseArmor;
+    AttackRange  = Tier->AttackRange;
+    AttackSpeed  = Tier->AttackSpeed;
 
     GetCharacterMovement()->MaxWalkSpeed = DataAsset->MoveSpeed;
 

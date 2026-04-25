@@ -181,6 +181,8 @@ bool UShopSubsystem::BuyUnit(int32 SlotIndex)
             // Add to bench and mark slot as sold
             PS->BenchUnits.Add(PurchasedUnit);
             CurrentShop[SlotIndex].bIsPurchased = true;
+            
+            PS->CheckForMerge(PurchasedUnit->UnitName);
 
             OnUnitPurchased.Broadcast(PurchasedUnit);
 
