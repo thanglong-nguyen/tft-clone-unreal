@@ -201,12 +201,21 @@ void UShopSubsystem::SellUnit(AUnit* Unit)
     {
         if (ATFTPlayerState* PS = PC->GetPlayerState<ATFTPlayerState>())
         {
+        
+            // How many original copies went into this unit
+            // 1 star = 1, 2 star = 3, 3 star = 9
+            int32 Copies = FMath::Pow(3.f, Unit->StarLevel - 1);
+           
             // Refund full cost — fallback to 1 if no data asset
-            int32 Refund = Unit->DataAsset ? Unit->DataAsset->Cost : 1;
+            int32 Refund = Unit->DataAsset ? Unit->DataAsset->Cost* Copies  : 1;
+            
             PS->AddGold(Refund);
-
-            // Return the unit's copy to the shared pool
-            ReturnToPool(Unit->UnitName);
+            
+            // Return all copies back to the pool
+            for (int32 i = 0; i < Copies; i++)
+            {
+                ReturnToPool(Unit->UnitName);
+            }
 
             // Remove from wherever the unit currently is
             PS->BenchUnits.Remove(Unit);
@@ -214,8 +223,8 @@ void UShopSubsystem::SellUnit(AUnit* Unit)
 
             Unit->Destroy();
 
-            UE_LOG(LogTemp, Log, TEXT("Sold unit for %d gold | Gold: %d"),
-                Refund, PS->Gold);
+            UE_LOG(LogTemp, Log, TEXT("Sold %s (Star %d) for %d gold | Returned %d copies to pool"),
+                *Unit->UnitName.ToString(), Unit->StarLevel, Refund, Copies);
         }
     }
 }
