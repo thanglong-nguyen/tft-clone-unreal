@@ -3,21 +3,44 @@
 #include "Blueprint/UserWidget.h"
 #include "ShopSlotWidget.generated.h"
 
+class UTextBlock;
+class UButton;
+
 UCLASS()
 class CUSTOMPROJECT_API UShopSlotWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
 public:
-	// Set this before adding to viewport
+	virtual void NativeConstruct() override;
+
+	// Which shop index this slot represents
 	UPROPERTY(BlueprintReadWrite, Category="Shop")
 	int32 SlotIndex = 0;
 
-	// Call from Blueprint to populate the slot visually
-	UFUNCTION(BlueprintImplementableEvent, Category="Shop")
-	void SetSlotData(const FString& UnitName, int32 Cost, bool bPurchased);
+	// Called by HUD to update this slot's display
+	// UnitName — name to show, empty if slot is empty
+	// Cost     — gold cost to show
+	// bPurchased — true if already bought this round
+	void RefreshSlot(const FName& UnitName, int32 Cost, bool bPurchased);
 
-	// Called when buy button is clicked
-	UFUNCTION(BlueprintCallable, Category="Shop")
+	// -------------------------------------------------------
+	// Widget bindings — names must match exactly in WBP_ShopSlot
+	// -------------------------------------------------------
+
+	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UTextBlock* UnitNameText;
+
+	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UTextBlock* CostText;
+
+	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UTextBlock* SoldText;
+
+	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UButton* BuyButton;
+
+private:
+	UFUNCTION()
 	void OnBuyClicked();
 };
