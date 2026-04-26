@@ -21,7 +21,8 @@ public class CustomProject : ModuleRules
 			"Niagara",
 			"UMG",
 			"Slate",
-			"GameplayTags" 
+			"GameplayTags" ,
+			"SlateCore" 
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
