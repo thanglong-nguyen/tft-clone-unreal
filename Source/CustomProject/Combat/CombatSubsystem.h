@@ -50,6 +50,12 @@ public:
 
     // Returns seconds remaining in the prep phase
     float GetPrepTimeRemaining() const { return PrepTimeRemaining; }
+    
+    // Returns seconds remaining in the prep phase
+    float GetCombatTimeRemaining() const { return CombatTimeRemaining; }
+    
+    // Returns seconds remaining in the prep phase
+    float GetResultTimeRemaining() const { return ResultTimeRemaining; }
 
     // -------------------------------------------------------
     // Unit Registration
@@ -72,6 +78,14 @@ public:
     // How long the prep phase lasts in seconds
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
     float PrepDuration = 15.f;
+    
+    // How long the prep phase lasts in seconds
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
+    float CombatDuration = 30.f;
+    
+    // How long the prep phase lasts in seconds
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
+    float ResultDuration = 5.f;
 
     // -------------------------------------------------------
     // Delegates — bind to these to react to game events
@@ -99,6 +113,12 @@ private:
 
     // Seconds remaining in prep phase
     float PrepTimeRemaining = 0.f;
+    
+    // Seconds remaining in combat phase
+    float CombatTimeRemaining = 0.f;
+    
+    // Seconds remaining in result phase
+    float ResultTimeRemaining = 0.f;  
 
     // Units currently registered for combat
     UPROPERTY()
@@ -110,6 +130,7 @@ private:
     // Timer handles — used to start/stop/clear timers
     FTimerHandle PrepCountdown; // counts down prep phase
     FTimerHandle CombatTick;    // drives the fight loop at 0.1s intervals
+    FTimerHandle ResultCountdown; 
 
     // -------------------------------------------------------
     // Internal Functions

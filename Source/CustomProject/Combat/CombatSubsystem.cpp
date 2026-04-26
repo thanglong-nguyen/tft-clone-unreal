@@ -45,6 +45,8 @@ void UCombatSubsystem::ClearEnemyUnits()
 
 void UCombatSubsystem::StartPrepPhase()
 {
+    GetWorld()->GetTimerManager().ClearTimer(PrepCountdown);
+    
     // Reset all player units to full HP for the new round
     for (AUnit* Unit : PlayerUnits)
     {
@@ -64,7 +66,7 @@ void UCombatSubsystem::StartPrepPhase()
     // Count down every second — when it hits 0 start combat
     GetWorld()->GetTimerManager().SetTimer(PrepCountdown, [this]()
     {
-        PrepTimeRemaining -= 1.f;
+        PrepTimeRemaining -= 1.f;;
 
         if (PrepTimeRemaining <= 0.f)
         {
@@ -78,6 +80,8 @@ void UCombatSubsystem::StartCombatPhase()
 {
     // Stop the prep countdown
     GetWorld()->GetTimerManager().ClearTimer(PrepCountdown);
+    
+    CombatTimeRemaining = CombatDuration;
 
     CurrentPhase = EGamePhase::Combat;
     OnPhaseChanged.Broadcast(EGamePhase::Combat);
@@ -85,6 +89,7 @@ void UCombatSubsystem::StartCombatPhase()
     // Start the fight loop — CombatUpdate fires every 0.1s
     GetWorld()->GetTimerManager().SetTimer(CombatTick, [this]()
     {
+        CombatTimeRemaining -= 0.1f;
         CombatUpdate();
 
     }, 0.1f, true);
@@ -154,6 +159,9 @@ void UCombatSubsystem::CheckRoundEnd()
     // All player units dead — player loses
     else if (LivingPlayers == 0)
         EndCombat(false);
+    
+    else if (CombatTimeRemaining<=0)
+        EndCombat(false);
 
     // Otherwise fight is still going — do nothing
 }
@@ -162,6 +170,8 @@ void UCombatSubsystem::EndCombat(bool bPlayerWon)
 {
     // Stop the fight loop
     GetWorld()->GetTimerManager().ClearTimer(CombatTick);
+    
+    ResultTimeRemaining = ResultDuration;
 
     // Update phase and notify listeners
     CurrentPhase = EGamePhase::Result;
@@ -184,13 +194,15 @@ void UCombatSubsystem::EndCombat(bool bPlayerWon)
             PS->AddXP(4);
         }
     }
+    
+    GetWorld()->GetTimerManager().SetTimer( ResultCountdown, [this]()
+    {
+        ResultTimeRemaining -= 1.f;
 
-    // Wait 3 seconds on the result screen then start next prep phase
-    GetWorld()->GetTimerManager().SetTimer(
-        PrepCountdown,
-        this,
-        &UCombatSubsystem::StartPrepPhase,
-        3.f,
-        false
-    );
+        if (ResultTimeRemaining <= 0.f)
+        {
+            StartPrepPhase();
+        }
+
+    }, 1.f, true);
 }
