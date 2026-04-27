@@ -28,10 +28,18 @@ void UTFTHUDWidget::NativeConstruct()
     PushInitialState();
     
     if (RerollButton)
+    {
         RerollButton->OnClicked.AddDynamic(this, &UTFTHUDWidget::OnRerollClicked);
+        RerollText -> SetText(FText::FromString("Reroll: 2g"));
+    }
+        
 
     if (BuyXPButton)
+    {
         BuyXPButton->OnClicked.AddDynamic(this, &UTFTHUDWidget::OnBuyXPClicked);
+        BuyXPText -> SetText(FText::FromString("Buy XP: 4g"));
+    }
+        
 }
 
 void UTFTHUDWidget::NativeTick(const FGeometry& MyGeometry, float DeltaTime)

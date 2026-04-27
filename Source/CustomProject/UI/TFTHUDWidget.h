@@ -61,6 +61,12 @@ public:
     UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
     UButton* BuyXPButton;
     
+    UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+    UTextBlock* RerollText; 
+    
+    UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+    UTextBlock* BuyXPText; 
+    
     UFUNCTION()
     void OnRerollClicked();
 
