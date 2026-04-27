@@ -1,9 +1,9 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Combat/CombatSubsystem.h"
 #include "TFTHUDWidget.generated.h"
 
-// Forward declarations
 class UCombatSubsystem;
 class UShopSubsystem;
 class ATFTPlayerState;
@@ -23,38 +23,40 @@ public:
 
     // -------------------------------------------------------
     // Widget Bindings
-    // Names must match exactly in WBP_HUD
+    // Variable names must match widget names exactly in WBP_HUD
     // -------------------------------------------------------
 
+    // Shows current round number
     UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
     UTextBlock* RoundText;
 
+    // Shows current phase — PREP, COMBAT, RESULT
     UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
     UTextBlock* PhaseText;
 
-    UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
-    UTextBlock* TimerText;
-
+    // Shows current gold amount
     UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
     UTextBlock* GoldText;
 
+    // Shows current player level
     UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
     UTextBlock* LevelText;
-    
+
+    // Shows current XP progress e.g. "4 / 10" or "MAX"
     UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
     UTextBlock* XPText;
 
-    // Keep timer as a progress bar:
+    // Decreasing bar showing time remaining in current phase
     UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
     UProgressBar* TimerBar;
 
-    // Container holding the two shop slot widgets
+    // Horizontal container holding the shop slot widgets
     UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
     UHorizontalBox* ShopContainer;
 
     // -------------------------------------------------------
-    // Public update functions
-    // Called internally and by delegates
+    // Update Functions
+    // Each one reads from cached subsystems and sets widget text
     // -------------------------------------------------------
 
     void UpdateGold();
@@ -62,11 +64,21 @@ public:
     void UpdateRound();
     void UpdateTimer();
     void UpdatePhase();
+
+    // Loops ShopContainer children and refreshes each slot widget
     void RefreshShopSlots();
 
 private:
+    // Subscribes to subsystem delegates so UI auto-updates on events
     void BindDelegates();
+
+    // Pushes current game state to all widgets on startup
     void PushInitialState();
+
+    // -------------------------------------------------------
+    // Delegate Handlers
+    // Bound in BindDelegates — fire when subsystems broadcast
+    // -------------------------------------------------------
 
     UFUNCTION()
     void HandlePhaseChanged(EGamePhase NewPhase);
@@ -79,7 +91,12 @@ private:
 
     UFUNCTION()
     void HandleLevelUp(int32 NewLevel, int32 BoardCapacity);
-    
+
+    // -------------------------------------------------------
+    // Cached References
+    // Set once in NativeConstruct — avoids repeated lookups
+    // -------------------------------------------------------
+
     UPROPERTY()
     UCombatSubsystem* CombatSS;
 
