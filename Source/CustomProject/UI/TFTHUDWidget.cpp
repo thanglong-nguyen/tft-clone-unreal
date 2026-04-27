@@ -6,6 +6,7 @@
 #include "Components/TextBlock.h"
 #include "Components/ProgressBar.h"
 #include "Components/HorizontalBox.h"
+#include "Components/Button.h"
 
 void UTFTHUDWidget::NativeConstruct()
 {
@@ -25,6 +26,12 @@ void UTFTHUDWidget::NativeConstruct()
 
     // Push current game state to all widgets immediately
     PushInitialState();
+    
+    if (RerollButton)
+        RerollButton->OnClicked.AddDynamic(this, &UTFTHUDWidget::OnRerollClicked);
+
+    if (BuyXPButton)
+        BuyXPButton->OnClicked.AddDynamic(this, &UTFTHUDWidget::OnBuyXPClicked);
 }
 
 void UTFTHUDWidget::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
@@ -161,6 +168,20 @@ void UTFTHUDWidget::RefreshShopSlots()
 
         SlotWidget->RefreshSlot(UnitName, Cost, Purchased);
     }
+}
+
+void UTFTHUDWidget::OnRerollClicked()
+{
+    if (!ShopSS || !PS) return;
+    ShopSS->RefreshShop(PS->PlayerLevel);
+}
+
+void UTFTHUDWidget::OnBuyXPClicked()
+{
+    if (!PS) return;
+    PS->BuyXP();
+    UpdateLevel();
+    UpdateGold();
 }
 
 // -------------------------------------------------------

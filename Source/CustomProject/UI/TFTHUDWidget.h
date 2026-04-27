@@ -4,6 +4,7 @@
 #include "Combat/CombatSubsystem.h"
 #include "TFTHUDWidget.generated.h"
 
+class UButton;
 class UCombatSubsystem;
 class UShopSubsystem;
 class ATFTPlayerState;
@@ -53,6 +54,18 @@ public:
     // Horizontal container holding the shop slot widgets
     UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
     UHorizontalBox* ShopContainer;
+    
+    UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+    UButton* RerollButton;
+
+    UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+    UButton* BuyXPButton;
+    
+    UFUNCTION()
+    void OnRerollClicked();
+
+    UFUNCTION()
+    void OnBuyXPClicked();
 
     // -------------------------------------------------------
     // Update Functions
