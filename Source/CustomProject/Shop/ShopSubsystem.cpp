@@ -105,6 +105,8 @@ UUnitDataAsset* UShopSubsystem::DrawFromPool(int32 PlayerLevel)
 
 void UShopSubsystem::GenerateShop(int32 PlayerLevel)
 {
+    if (UnitPool.IsEmpty()) InitPool();
+    
     // Return any unsold units from the previous shop back to the pool
     for (const FShopSlot& ShopSlot : CurrentShop)
     {
@@ -183,7 +185,7 @@ bool UShopSubsystem::BuyUnit(int32 SlotIndex)
             CurrentShop[SlotIndex].bIsPurchased = true;
             
             PS->CheckForMerge(PurchasedUnit->UnitName);
-
+            OnShopRefresh.Broadcast(); 
             OnUnitPurchased.Broadcast(PurchasedUnit);
 
             UE_LOG(LogTemp, Log, TEXT("Bought %s for %d gold | Gold remaining: %d"),
