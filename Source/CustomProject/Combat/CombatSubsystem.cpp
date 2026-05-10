@@ -45,6 +45,9 @@ void UCombatSubsystem::ClearEnemyUnits()
 
 void UCombatSubsystem::StartPrepPhase()
 {
+    // Clear all timers to prevent conflicts
+    GetWorld()->GetTimerManager().ClearTimer(ResultCountdown);
+    GetWorld()->GetTimerManager().ClearTimer(CombatTick);
     GetWorld()->GetTimerManager().ClearTimer(PrepCountdown);
     
     // Reset all player units to full HP for the new round
