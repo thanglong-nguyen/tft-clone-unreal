@@ -2,6 +2,7 @@
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "Units/Unit.h"
+#include "Combat/BattlefieldActor.h"
 #include "CombatSubsystem.generated.h"
 
 // Represents the current phase of the game loop
@@ -29,6 +30,9 @@ class CUSTOMPROJECT_API UCombatSubsystem : public UGameInstanceSubsystem
 
 public:
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+    
+    UPROPERTY()
+    ABattlefieldActor* Battlefield = nullptr;
 
     // -------------------------------------------------------
     // Phase Control

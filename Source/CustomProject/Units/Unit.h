@@ -91,6 +91,15 @@ public:
     // The unit this one is currently targeting
     UPROPERTY(BlueprintReadOnly, Category="Combat")
     TObjectPtr<AUnit> CurrentTarget;
+    
+    
+    // Stores which grid cell this unit occupies
+    // -1 means not on the grid
+    UPROPERTY()
+    int32 GridCol = -1;
+
+    UPROPERTY()
+    int32 GridRow = -1;
 
     // -------------------------------------------------------
     // Combat Interface

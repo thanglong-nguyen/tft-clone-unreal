@@ -2,6 +2,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
 #include "Units/Unit.h"
+#include "Combat/BattlefieldActor.h"
 #include "TFTPlayerState.generated.h"
 
 // Fired when the player levels up
@@ -52,6 +53,9 @@ public:
     // Board & Bench
     // -------------------------------------------------------
 
+    UPROPERTY()
+    ABattlefieldActor* Battlefield = nullptr;
+    
     // Units currently placed on the battlefield
     UPROPERTY(BlueprintReadOnly, Category="Board")
     TArray<AUnit*> BoardUnits;

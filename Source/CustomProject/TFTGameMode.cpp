@@ -1,9 +1,11 @@
 #include "TFTGameMode.h"
 #include "Shop/ShopSubsystem.h"
 #include "Combat/CombatSubsystem.h"
+#include "Player/TFTPlayerState.h"
 #include "Units/Unit.h"
 #include "Units/UnitDataAsset.h"
 #include "Blueprint/UserWidget.h"
+#include "Combat/BattlefieldActor.h"
 
 void ATFTGameMode::BeginPlay()
 {
@@ -53,7 +55,19 @@ void ATFTGameMode::StartGame()
         UE_LOG(LogTemp, Error, TEXT("HUDWidgetClass is null"));
     }
 
+    FActorSpawnParameters Params;
+    ABattlefieldActor* Battlefield = GetWorld()->SpawnActor<ABattlefieldActor>(
+        ABattlefieldActor::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, Params);
+
+    // Give it to the combat subsystem
+    if (UCombatSubsystem* Combat = GetGameInstance()->GetSubsystem<UCombatSubsystem>())
+        Combat->Battlefield = Battlefield;
     
+    if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+    {
+        if (ATFTPlayerState* PS = PC->GetPlayerState<ATFTPlayerState>())
+            PS->Battlefield = Battlefield;
+    }
 
     
 }

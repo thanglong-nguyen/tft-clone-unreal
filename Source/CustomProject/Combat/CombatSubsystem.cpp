@@ -60,9 +60,6 @@ void UCombatSubsystem::StartPrepPhase()
     CurrentPhase      = EGamePhase::Prep;
     PrepTimeRemaining = PrepDuration;
 
-    // Stop the combat tick if it was still running
-    GetWorld()->GetTimerManager().ClearTimer(CombatTick);
-
     // Notify listeners (UI updates to show prep screen)
     OnPhaseChanged.Broadcast(EGamePhase::Prep);
 
