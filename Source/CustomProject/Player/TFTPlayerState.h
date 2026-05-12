@@ -63,6 +63,8 @@ public:
     // Units owned but not on the battlefield
     UPROPERTY(BlueprintReadOnly, Category="Board")
     TArray<AUnit*> BenchUnits;
+    
+    void TryAutoPlace(AUnit* Unit);
 
     // Returns true if board has room for another unit
     bool CanPlaceOnBoard() const;

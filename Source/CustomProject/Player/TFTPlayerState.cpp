@@ -103,6 +103,13 @@ bool ATFTPlayerState::MoveToBoard(AUnit* Unit)
 void ATFTPlayerState::MoveToBench(AUnit* Unit)
 {
     if (!Unit) return;
+    
+    if (Battlefield && Unit->GridCol >= 0)
+    {
+        Battlefield->FreePlayerCell(Unit->GridCol, Unit->GridRow);
+        Unit->GridCol = -1;
+        Unit->GridRow = -1;
+    }
 
     BoardUnits.Remove(Unit);
 
@@ -213,6 +220,29 @@ void ATFTPlayerState::MergeUnits(TArray<AUnit*>& Copies)
         UE_LOG(LogTemp, Log, TEXT("%s merged to %d star"),
             *Merged->UnitName.ToString(), Merged->StarLevel);
     }
-    
 
+}
+
+void ATFTPlayerState::TryAutoPlace(AUnit* Unit)
+{
+    if (!Unit || !Battlefield) return;
+    if (BoardUnits.Contains(Unit)) return;
+    if (!CanPlaceOnBoard()) return;
+
+    int32 Col, Row;
+    if (Battlefield->GetNextFreePlayerCell(Col, Row))
+    {
+        FVector Position = Battlefield->GetPlayerCellPosition(Col, Row);
+        Unit->SetActorLocation(Position);
+        Battlefield->OccupyPlayerCell(Col, Row);
+
+        // Store cell on unit so we can free it later
+        Unit->GridCol = Col;
+        Unit->GridRow = Row;
+
+        MoveToBoard(Unit);
+
+        UE_LOG(LogTemp, Log, TEXT("Auto-placed %s at cell [%d,%d]"),
+            *Unit->UnitName.ToString(), Col, Row);
+    }
 }
