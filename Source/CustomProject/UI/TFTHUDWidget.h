@@ -21,6 +21,15 @@ class CUSTOMPROJECT_API UTFTHUDWidget : public UUserWidget
 public:
     virtual void NativeConstruct() override;
     virtual void NativeTick(const FGeometry& MyGeometry, float DeltaTime) override;
+    
+    UPROPERTY()
+    UCombatSubsystem* CombatSS;
+
+    UPROPERTY()
+    UShopSubsystem* ShopSS;
+
+    UPROPERTY()
+    ATFTPlayerState* PS;
 
     // -------------------------------------------------------
     // Widget Bindings
@@ -116,12 +125,5 @@ private:
     // Set once in NativeConstruct — avoids repeated lookups
     // -------------------------------------------------------
 
-    UPROPERTY()
-    UCombatSubsystem* CombatSS;
-
-    UPROPERTY()
-    UShopSubsystem* ShopSS;
-
-    UPROPERTY()
-    ATFTPlayerState* PS;
+    
 };

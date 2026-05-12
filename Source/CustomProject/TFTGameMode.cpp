@@ -27,10 +27,30 @@ void ATFTGameMode::StartGame()
     
     SetupShop();
     
-    if (UCombatSubsystem* Combat = GetGameInstance()->GetSubsystem<UCombatSubsystem>())
+    // Cache subsystem and player state references once
+    // All update functions use these cached pointers
+    UGameInstance* GI = GetGameInstance();
+    CombatSS = GI->GetSubsystem<UCombatSubsystem>();
+    ShopSS   = GI->GetSubsystem<UShopSubsystem>();
+    
+    FActorSpawnParameters Params;
+    ABattlefieldActor* Battlefield = GetWorld()->SpawnActor<ABattlefieldActor>(
+        ABattlefieldActor::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, Params);
+    
+    if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+        PS = PC->GetPlayerState<ATFTPlayerState>();
+    
+    if (PS)
     {
-        Combat->OnPhaseChanged.AddDynamic(this, &ATFTGameMode::OnPhaseChanged);
-        Combat->StartPrepPhase();
+        PS->Battlefield = Battlefield;
+    }
+    
+    if (CombatSS)
+    {
+        CombatSS->Battlefield = Battlefield;
+        CombatSS->OnPhaseChanged.AddDynamic(this, &ATFTGameMode::OnPhaseChanged);
+        CombatSS->StartPrepPhase();
+        
     }
 
     if (HUDWidgetClass)
@@ -40,6 +60,9 @@ void ATFTGameMode::StartGame()
             HUDWidget = CreateWidget<UTFTHUDWidget>(PC, HUDWidgetClass);
             if (HUDWidget)
             {
+                HUDWidget->CombatSS = CombatSS;
+                HUDWidget->ShopSS = ShopSS;
+                HUDWidget->PS = PS;
                 HUDWidget->AddToPlayerScreen();
                 HUDWidget->SetVisibility(ESlateVisibility::Visible);
                 UE_LOG(LogTemp, Log, TEXT("HUD added to viewport"));
@@ -53,20 +76,6 @@ void ATFTGameMode::StartGame()
     else
     {
         UE_LOG(LogTemp, Error, TEXT("HUDWidgetClass is null"));
-    }
-
-    FActorSpawnParameters Params;
-    ABattlefieldActor* Battlefield = GetWorld()->SpawnActor<ABattlefieldActor>(
-        ABattlefieldActor::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, Params);
-
-    // Give it to the combat subsystem
-    if (UCombatSubsystem* Combat = GetGameInstance()->GetSubsystem<UCombatSubsystem>())
-        Combat->Battlefield = Battlefield;
-    
-    if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
-    {
-        if (ATFTPlayerState* PS = PC->GetPlayerState<ATFTPlayerState>())
-            PS->Battlefield = Battlefield;
     }
 
     
@@ -87,35 +96,51 @@ void ATFTGameMode::SetupShop()
 
 void ATFTGameMode::OnPhaseChanged(EGamePhase NewPhase)
 {
-    if (NewPhase == EGamePhase::Combat)
-        SpawnEnemiesForRound();
-}
-
-void ATFTGameMode::SpawnEnemiesForRound()
-{
-    UCombatSubsystem* Combat = GetGameInstance()->GetSubsystem<UCombatSubsystem>();
-    if (!Combat || EnemyUnitPool.IsEmpty()) return;
-
-    for (int32 i = 0; i < EnemyUnitPool.Num(); i++)
+    
+    switch (NewPhase)
     {
-        UUnitDataAsset* EnemyData = EnemyUnitPool[i];
-        if (!EnemyData) continue;
+        case EGamePhase::Prep:
+            for (AUnit* Unit : PS->BoardUnits)
+            {
+                CombatSS->RegisterPlayerUnit(Unit);
+            }
+            break;
+        
+        
+        case EGamePhase::Combat:
+        
+            if (!CombatSS || !CombatSS->Battlefield) return;
 
-        FVector Location = FVector(500.f, i * 200.f, 0.f);
-        FActorSpawnParameters Params;
-        Params.SpawnCollisionHandlingOverride =
-            ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+            // Spawn enemies from pool
+            for (int32 i = 0; i < EnemyUnitPool.Num(); i++)
+            {
+                UUnitDataAsset* Data = EnemyUnitPool[i];
+                if (!Data) continue;
 
-        AUnit* Enemy = GetWorld()->SpawnActor<AUnit>(
-            AUnit::StaticClass(), Location, FRotator::ZeroRotator, Params);
+                int32 Col, Row;
+                if (!CombatSS->Battlefield->GetNextFreeEnemyCell(Col, Row)) continue;
 
-        if (!Enemy) continue;
+                FActorSpawnParameters Params;
+                Params.SpawnCollisionHandlingOverride =
+                    ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
-        Enemy->DataAsset = EnemyData;
-        Enemy->InitFromDataAsset();
-        Combat->RegisterEnemyUnit(Enemy);
+                // Spawn off screen — CombatSubsystem will move them on combat start
+                AUnit* Enemy = GetWorld()->SpawnActor<AUnit>(
+                    AUnit::StaticClass(), FVector(0.f, 0.f, -1000.f),
+                    FRotator::ZeroRotator, Params);
+
+                if (!Enemy) continue;
+
+                Enemy->DataAsset = Data;
+                Enemy->InitFromDataAsset();
+                Enemy->GridCol = Col;
+                Enemy->GridRow = Row;
+                CombatSS->Battlefield->OccupyEnemyCell(Col, Row);
+                CombatSS->RegisterEnemyUnit(Enemy);
+            }
+            break;
+        
+        case EGamePhase::Result:
+            break;
     }
-
-    UE_LOG(LogTemp, Log, TEXT("Spawned %d enemies for round %d"),
-        EnemyUnitPool.Num(), Combat->GetCurrentRound());
 }

@@ -28,6 +28,15 @@ public:
 private:
     UPROPERTY()
     UTFTHUDWidget* HUDWidget = nullptr;
+    
+    UPROPERTY()
+    UCombatSubsystem* CombatSS;
+
+    UPROPERTY()
+    UShopSubsystem* ShopSS;
+
+    UPROPERTY()
+    ATFTPlayerState* PS;
 
     UFUNCTION()
     void StartGame();
@@ -36,6 +45,4 @@ private:
 
     UFUNCTION()
     void OnPhaseChanged(EGamePhase NewPhase);
-
-    void SpawnEnemiesForRound();
 };
