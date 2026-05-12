@@ -110,6 +110,20 @@ void ATFTGameMode::OnPhaseChanged(EGamePhase NewPhase)
         case EGamePhase::Combat:
         
             if (!CombatSS || !CombatSS->Battlefield) return;
+        
+            if (!PS) return;
+        
+            while (PS->CanPlaceOnBoard() && PS->BenchUnits.Num() > 0)
+            {
+                for (AUnit* Unit : PS->BenchUnits)
+                {
+                    PS->TryAutoPlace(Unit);
+                    if (PS->BoardUnits.Contains(Unit))
+                    {
+                        CombatSS->RegisterPlayerUnit(Unit);
+                    }
+                }
+            }
 
             // Spawn enemies from pool
             for (int32 i = 0; i < EnemyUnitPool.Num(); i++)
