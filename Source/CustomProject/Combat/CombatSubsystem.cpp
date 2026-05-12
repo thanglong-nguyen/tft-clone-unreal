@@ -34,7 +34,10 @@ void UCombatSubsystem::ClearEnemyUnits()
     // Destroy each enemy actor then empty the array
     for (AUnit* Unit : EnemyUnits)
     {
-        if (Unit) Unit->Destroy();
+        if (!Unit) continue;
+        if (Battlefield && Unit->GridCol >= 0)
+            Battlefield->FreeEnemyCell(Unit->GridCol, Unit->GridRow);
+        Unit->Destroy();
     }
     EnemyUnits.Empty();
 }
@@ -50,23 +53,32 @@ void UCombatSubsystem::StartPrepPhase()
     GetWorld()->GetTimerManager().ClearTimer(CombatTick);
     GetWorld()->GetTimerManager().ClearTimer(PrepCountdown);
     
-    // Reset all player units to full HP for the new round
-    for (AUnit* Unit : PlayerUnits)
-    {
-        if (Unit) Unit->ResetForNewRound();
-    }
-
     // Set state
     CurrentPhase      = EGamePhase::Prep;
     PrepTimeRemaining = PrepDuration;
-
+    
     // Notify listeners (UI updates to show prep screen)
     OnPhaseChanged.Broadcast(EGamePhase::Prep);
+    
+    // Reset all player units to full HP for the new round
+    for (AUnit* Unit : PlayerUnits)
+    {
+        if (!Unit) continue;
+
+        Unit->ResetForNewRound();
+
+        if (Battlefield && Unit->GridCol >= 0)
+        {
+            FVector Position = Battlefield->GetPlayerCellPosition(
+                Unit->GridCol, Unit->GridRow);
+            Unit->SetActorLocation(Position);
+        }
+    }
 
     // Count down every second — when it hits 0 start combat
     GetWorld()->GetTimerManager().SetTimer(PrepCountdown, [this]()
     {
-        PrepTimeRemaining -= 1.f;;
+        PrepTimeRemaining -= 1.f;
 
         if (PrepTimeRemaining <= 0.f)
         {
@@ -85,6 +97,17 @@ void UCombatSubsystem::StartCombatPhase()
 
     CurrentPhase = EGamePhase::Combat;
     OnPhaseChanged.Broadcast(EGamePhase::Combat);
+    
+    // Move enemies from off-screen to their grid positions
+    for (AUnit* Unit : EnemyUnits)
+    {
+        if (!Unit) continue;
+        if (Battlefield && Unit->GridCol >= 0)
+        {
+            Unit->SetActorLocation(
+                Battlefield->GetEnemyCellPosition(Unit->GridCol, Unit->GridRow));
+        }
+    }
 
     // Start the fight loop — CombatUpdate fires every 0.1s
     GetWorld()->GetTimerManager().SetTimer(CombatTick, [this]()
