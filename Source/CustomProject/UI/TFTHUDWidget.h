@@ -12,6 +12,7 @@ class UTextBlock;
 class UProgressBar;
 class UHorizontalBox;
 class UShopSlotWidget;
+class ATFTGameMode;
 
 UCLASS()
 class CUSTOMPROJECT_API UTFTHUDWidget : public UUserWidget
@@ -23,13 +24,7 @@ public:
     virtual void NativeTick(const FGeometry& MyGeometry, float DeltaTime) override;
     
     UPROPERTY()
-    UCombatSubsystem* CombatSS;
-
-    UPROPERTY()
-    UShopSubsystem* ShopSS;
-
-    UPROPERTY()
-    ATFTPlayerState* PS;
+    ATFTGameMode* TFTGameMode;
 
     // -------------------------------------------------------
     // Widget Bindings

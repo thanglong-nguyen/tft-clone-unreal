@@ -2,9 +2,9 @@
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "Units/Unit.h"
-#include "Combat/BattlefieldActor.h"
 #include "CombatSubsystem.generated.h"
 
+class ATFTGameMode;
 // Represents the current phase of the game loop
 UENUM(BlueprintType)
 enum class EGamePhase : uint8
@@ -32,7 +32,7 @@ public:
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;
     
     UPROPERTY()
-    ABattlefieldActor* Battlefield = nullptr;
+    ATFTGameMode* TFTGameMode;
 
     // -------------------------------------------------------
     // Phase Control

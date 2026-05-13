@@ -3,6 +3,7 @@
 #include "TimerManager.h"
 #include "Engine/World.h"
 #include "Player/TFTPlayerState.h"
+#include "TFTGameMode.h"
 
 void UCombatSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -35,8 +36,8 @@ void UCombatSubsystem::ClearEnemyUnits()
     for (AUnit* Unit : EnemyUnits)
     {
         if (!Unit) continue;
-        if (Battlefield && Unit->GridCol >= 0)
-            Battlefield->FreeEnemyCell(Unit->GridCol, Unit->GridRow);
+        if (TFTGameMode->Battlefield && Unit->GridCol >= 0)
+            TFTGameMode->Battlefield->FreeEnemyCell(Unit->GridCol, Unit->GridRow);
         Unit->Destroy();
     }
     EnemyUnits.Empty();
@@ -67,9 +68,9 @@ void UCombatSubsystem::StartPrepPhase()
 
         Unit->ResetForNewRound();
 
-        if (Battlefield && Unit->GridCol >= 0)
+        if (TFTGameMode->Battlefield && Unit->GridCol >= 0)
         {
-            FVector Position = Battlefield->GetPlayerCellPosition(
+            FVector Position = TFTGameMode->Battlefield->GetPlayerCellPosition(
                 Unit->GridCol, Unit->GridRow);
             Unit->SetActorLocation(Position);
         }
@@ -102,10 +103,10 @@ void UCombatSubsystem::StartCombatPhase()
     for (AUnit* Unit : EnemyUnits)
     {
         if (!Unit) continue;
-        if (Battlefield && Unit->GridCol >= 0)
+        if (TFTGameMode->Battlefield && Unit->GridCol >= 0)
         {
             Unit->SetActorLocation(
-                Battlefield->GetEnemyCellPosition(Unit->GridCol, Unit->GridRow));
+                TFTGameMode->Battlefield->GetEnemyCellPosition(Unit->GridCol, Unit->GridRow));
         }
     }
 

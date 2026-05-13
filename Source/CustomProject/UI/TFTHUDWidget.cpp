@@ -1,4 +1,6 @@
 #include "UI/TFTHUDWidget.h"
+
+#include "TFTGameMode.h"
 #include "UI/ShopSlotWidget.h"
 #include "Player/TFTPlayerState.h"
 #include "Combat/CombatSubsystem.h"
@@ -11,15 +13,6 @@
 void UTFTHUDWidget::NativeConstruct()
 {
     Super::NativeConstruct();
-
-    // Cache subsystem and player state references once
-    // All update functions use these cached pointers
-    UGameInstance* GI = GetGameInstance();
-    CombatSS = GI->GetSubsystem<UCombatSubsystem>();
-    ShopSS   = GI->GetSubsystem<UShopSubsystem>();
-
-    if (APlayerController* PC = GetOwningPlayer())
-        PS = PC->GetPlayerState<ATFTPlayerState>();
 
     // Bind after caching so delegates have valid pointers
     BindDelegates();
@@ -54,19 +47,19 @@ void UTFTHUDWidget::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
 void UTFTHUDWidget::BindDelegates()
 {
     // Subscribe to combat events
-    if (CombatSS)
+    if (TFTGameMode->CombatSS)
     {
-        CombatSS->OnPhaseChanged.AddDynamic(this, &UTFTHUDWidget::HandlePhaseChanged);
-        CombatSS->OnRoundChanged.AddDynamic(this, &UTFTHUDWidget::HandleRoundChanged);
+        TFTGameMode->CombatSS->OnPhaseChanged.AddDynamic(this, &UTFTHUDWidget::HandlePhaseChanged);
+        TFTGameMode->CombatSS->OnRoundChanged.AddDynamic(this, &UTFTHUDWidget::HandleRoundChanged);
     }
 
     // Subscribe to shop events
-    if (ShopSS)
-        ShopSS->OnShopRefresh.AddDynamic(this, &UTFTHUDWidget::HandleShopRefreshed);
+    if (TFTGameMode->ShopSS)
+        TFTGameMode->ShopSS->OnShopRefresh.AddDynamic(this, &UTFTHUDWidget::HandleShopRefreshed);
 
     // Subscribe to player level up events
-    if (PS)
-        PS->OnLevelUp.AddDynamic(this, &UTFTHUDWidget::HandleLevelUp);
+    if (TFTGameMode->PS)
+        TFTGameMode->PS->OnLevelUp.AddDynamic(this, &UTFTHUDWidget::HandleLevelUp);
 }
 
 void UTFTHUDWidget::PushInitialState()
@@ -87,50 +80,50 @@ void UTFTHUDWidget::PushInitialState()
 
 void UTFTHUDWidget::UpdateGold()
 {
-    if (!PS || !GoldText) return;
+    if (!TFTGameMode->PS || !GoldText) return;
     GoldText->SetText(FText::FromString(
-        FString::Printf(TEXT("Gold: %d"), PS->Gold)));
+        FString::Printf(TEXT("Gold: %d"), TFTGameMode->PS->Gold)));
 }
 
 void UTFTHUDWidget::UpdateLevel()
 {
-    if (!PS || !LevelText || !XPText) return;
+    if (!TFTGameMode->PS || !LevelText || !XPText) return;
 
     LevelText->SetText(FText::FromString(
-        FString::Printf(TEXT("Level: %d"), PS->PlayerLevel)));
+        FString::Printf(TEXT("Level: %d"), TFTGameMode->PS->PlayerLevel)));
 
     // Show MAX when player reaches level cap
-    if (PS->PlayerLevel >= 8)
+    if (TFTGameMode->PS->PlayerLevel >= 8)
         XPText->SetText(FText::FromString(TEXT("MAX")));
     else
         XPText->SetText(FText::FromString(
-            FString::Printf(TEXT("%d / %d"), PS->CurrentXP, PS->GetXPToNextLevel())));
+            FString::Printf(TEXT("%d / %d"), TFTGameMode->PS->CurrentXP, TFTGameMode->PS->GetXPToNextLevel())));
 }
 
 void UTFTHUDWidget::UpdateRound()
 {
-    if (!CombatSS || !RoundText) return;
+    if (!TFTGameMode->CombatSS || !RoundText) return;
     RoundText->SetText(FText::FromString(
-        FString::Printf(TEXT("Round: %d"), CombatSS->GetCurrentRound())));
+        FString::Printf(TEXT("Round: %d"), TFTGameMode->CombatSS ->GetCurrentRound())));
 }
 
 void UTFTHUDWidget::UpdateTimer()
 {
-    if (!CombatSS || !TimerBar) return;
+    if (!TFTGameMode->CombatSS  || !TimerBar) return;
 
     float Percent = 0.f;
 
     // Each phase has its own duration — bar fills or drains accordingly
-    switch (CombatSS->GetCurrentPhase())
+    switch (TFTGameMode->CombatSS ->GetCurrentPhase())
     {
     case EGamePhase::Prep:
-        Percent = CombatSS->GetPrepTimeRemaining() / CombatSS->PrepDuration;
+        Percent = TFTGameMode->CombatSS ->GetPrepTimeRemaining() / TFTGameMode->CombatSS ->PrepDuration;
         break;
     case EGamePhase::Combat:
-        Percent = CombatSS->GetCombatTimeRemaining() / CombatSS->CombatDuration;
+        Percent = TFTGameMode->CombatSS ->GetCombatTimeRemaining() / TFTGameMode->CombatSS ->CombatDuration;
         break;
     case EGamePhase::Result:
-        Percent = CombatSS->GetResultTimeRemaining() / CombatSS->ResultDuration;
+        Percent = TFTGameMode->CombatSS ->GetResultTimeRemaining() / TFTGameMode->CombatSS ->ResultDuration;
         break;
     }
 
@@ -139,10 +132,10 @@ void UTFTHUDWidget::UpdateTimer()
 
 void UTFTHUDWidget::UpdatePhase()
 {
-    if (!CombatSS || !PhaseText) return;
+    if (!TFTGameMode->CombatSS  || !PhaseText) return;
 
     FString PhaseStr;
-    switch (CombatSS->GetCurrentPhase())
+    switch (TFTGameMode->CombatSS ->GetCurrentPhase())
     {
     case EGamePhase::Prep:   PhaseStr = TEXT("PREP");   break;
     case EGamePhase::Combat: PhaseStr = TEXT("COMBAT"); break;
@@ -154,10 +147,10 @@ void UTFTHUDWidget::UpdatePhase()
 
 void UTFTHUDWidget::RefreshShopSlots()
 {
-    if (!ShopSS || !ShopContainer) return;
+    if (!TFTGameMode->ShopSS  || !ShopContainer) return;
 
     int32 SlotCount = ShopContainer->GetChildrenCount();
-    const TArray<FShopSlot>& CurrentShop = ShopSS->CurrentShop;
+    const TArray<FShopSlot>& CurrentShop = TFTGameMode->ShopSS ->CurrentShop;
 
     for (int32 i = 0; i < SlotCount; ++i)
     {
@@ -180,14 +173,14 @@ void UTFTHUDWidget::RefreshShopSlots()
 
 void UTFTHUDWidget::OnRerollClicked()
 {
-    if (!ShopSS || !PS) return;
-    ShopSS->RefreshShop(PS->PlayerLevel);
+    if (!TFTGameMode->ShopSS  || !TFTGameMode->PS) return;
+    TFTGameMode->ShopSS ->RefreshShop(TFTGameMode->PS->PlayerLevel);
 }
 
 void UTFTHUDWidget::OnBuyXPClicked()
 {
-    if (!PS) return;
-    PS->BuyXP();
+    if (!TFTGameMode->PS) return;
+    TFTGameMode->PS->BuyXP();
     UpdateLevel();
     UpdateGold();
 }

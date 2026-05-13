@@ -2,9 +2,9 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
 #include "Units/Unit.h"
-#include "Combat/BattlefieldActor.h"
 #include "TFTPlayerState.generated.h"
 
+class ATFTGameMode;
 // Fired when the player levels up
 // UI listens to this to update the level display
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnLevelUp, int32, NewLevel, int32, BoardCapacity);
@@ -16,6 +16,9 @@ class CUSTOMPROJECT_API ATFTPlayerState : public APlayerState
 
 public:
     ATFTPlayerState();
+    
+    UPROPERTY()
+    ATFTGameMode* TFTGameMode;
 
     // -------------------------------------------------------
     // Level & XP
@@ -52,9 +55,6 @@ public:
     // -------------------------------------------------------
     // Board & Bench
     // -------------------------------------------------------
-
-    UPROPERTY()
-    ABattlefieldActor* Battlefield = nullptr;
     
     // Units currently placed on the battlefield
     UPROPERTY(BlueprintReadOnly, Category="Board")

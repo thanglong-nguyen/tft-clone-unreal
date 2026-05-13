@@ -34,7 +34,7 @@ void ATFTGameMode::StartGame()
     ShopSS   = GI->GetSubsystem<UShopSubsystem>();
     
     FActorSpawnParameters Params;
-    ABattlefieldActor* Battlefield = GetWorld()->SpawnActor<ABattlefieldActor>(
+    Battlefield = GetWorld()->SpawnActor<ABattlefieldActor>(
         ABattlefieldActor::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, Params);
     
     if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
@@ -42,15 +42,14 @@ void ATFTGameMode::StartGame()
     
     if (PS)
     {
-        PS->Battlefield = Battlefield;
+        PS->TFTGameMode = this;
     }
     
     if (CombatSS)
     {
-        CombatSS->Battlefield = Battlefield;
+        CombatSS->TFTGameMode = this;
         CombatSS->OnPhaseChanged.AddDynamic(this, &ATFTGameMode::OnPhaseChanged);
         CombatSS->StartPrepPhase();
-        
     }
 
     if (HUDWidgetClass)
@@ -60,9 +59,7 @@ void ATFTGameMode::StartGame()
             HUDWidget = CreateWidget<UTFTHUDWidget>(PC, HUDWidgetClass);
             if (HUDWidget)
             {
-                HUDWidget->CombatSS = CombatSS;
-                HUDWidget->ShopSS = ShopSS;
-                HUDWidget->PS = PS;
+                HUDWidget->TFTGameMode = this;
                 HUDWidget->AddToPlayerScreen();
                 HUDWidget->SetVisibility(ESlateVisibility::Visible);
                 UE_LOG(LogTemp, Log, TEXT("HUD added to viewport"));
@@ -77,8 +74,6 @@ void ATFTGameMode::StartGame()
     {
         UE_LOG(LogTemp, Error, TEXT("HUDWidgetClass is null"));
     }
-
-    
 }
 
 void ATFTGameMode::SetupShop()
@@ -109,7 +104,7 @@ void ATFTGameMode::OnPhaseChanged(EGamePhase NewPhase)
         
         case EGamePhase::Combat:
         
-            if (!CombatSS || !CombatSS->Battlefield) return;
+            if (!CombatSS || !Battlefield) return;
         
             if (!PS) return;
         
@@ -132,7 +127,7 @@ void ATFTGameMode::OnPhaseChanged(EGamePhase NewPhase)
                 if (!Data) continue;
 
                 int32 Col, Row;
-                if (!CombatSS->Battlefield->GetNextFreeEnemyCell(Col, Row)) continue;
+                if (!Battlefield->GetNextFreeEnemyCell(Col, Row)) continue;
 
                 FActorSpawnParameters Params;
                 Params.SpawnCollisionHandlingOverride =
@@ -149,7 +144,7 @@ void ATFTGameMode::OnPhaseChanged(EGamePhase NewPhase)
                 Enemy->InitFromDataAsset();
                 Enemy->GridCol = Col;
                 Enemy->GridRow = Row;
-                CombatSS->Battlefield->OccupyEnemyCell(Col, Row);
+                Battlefield->OccupyEnemyCell(Col, Row);
                 CombatSS->RegisterEnemyUnit(Enemy);
             }
             break;

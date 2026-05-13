@@ -1,4 +1,6 @@
 #include "Player/TFTPlayerState.h"
+
+#include "TFTGameMode.h"
 #include "Units/Unit.h"
 
 ATFTPlayerState::ATFTPlayerState()
@@ -104,9 +106,9 @@ void ATFTPlayerState::MoveToBench(AUnit* Unit)
 {
     if (!Unit) return;
     
-    if (Battlefield && Unit->GridCol >= 0)
+    if (TFTGameMode->Battlefield  && Unit->GridCol >= 0)
     {
-        Battlefield->FreePlayerCell(Unit->GridCol, Unit->GridRow);
+        TFTGameMode->Battlefield->FreePlayerCell(Unit->GridCol, Unit->GridRow);
         Unit->GridCol = -1;
         Unit->GridRow = -1;
     }
@@ -225,16 +227,16 @@ void ATFTPlayerState::MergeUnits(TArray<AUnit*>& Copies)
 
 void ATFTPlayerState::TryAutoPlace(AUnit* Unit)
 {
-    if (!Unit || !Battlefield) return;
+    if (!Unit || !TFTGameMode->Battlefield) return;
     if (BoardUnits.Contains(Unit)) return;
     if (!CanPlaceOnBoard()) return;
 
     int32 Col, Row;
-    if (Battlefield->GetNextFreePlayerCell(Col, Row))
+    if (TFTGameMode->Battlefield->GetNextFreePlayerCell(Col, Row))
     {
-        FVector Position = Battlefield->GetPlayerCellPosition(Col, Row);
+        FVector Position = TFTGameMode->Battlefield->GetPlayerCellPosition(Col, Row);
         Unit->SetActorLocation(Position);
-        Battlefield->OccupyPlayerCell(Col, Row);
+        TFTGameMode->Battlefield->OccupyPlayerCell(Col, Row);
 
         // Store cell on unit so we can free it later
         Unit->GridCol = Col;

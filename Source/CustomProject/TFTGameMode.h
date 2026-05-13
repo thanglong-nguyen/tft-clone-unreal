@@ -3,6 +3,7 @@
 #include "GameFramework/GameModeBase.h"
 #include "Combat/CombatSubsystem.h"
 #include "UI/TFTHUDWidget.h"
+#include "Combat/BattlefieldActor.h"
 #include "TFTGameMode.generated.h"
 
 UCLASS()
@@ -13,6 +14,18 @@ class CUSTOMPROJECT_API ATFTGameMode : public AGameModeBase
 public:
     virtual void BeginPlay() override;
 
+    UPROPERTY()
+    UCombatSubsystem* CombatSS;
+
+    UPROPERTY()
+    UShopSubsystem* ShopSS;
+
+    UPROPERTY()
+    ATFTPlayerState* PS;
+    
+    UPROPERTY()
+    ABattlefieldActor* Battlefield;
+    
     // Assign WBP_HUD here in BP_TFTGameMode
     UPROPERTY(EditAnywhere, Category="UI")
     TSubclassOf<UTFTHUDWidget> HUDWidgetClass;
@@ -28,15 +41,6 @@ public:
 private:
     UPROPERTY()
     UTFTHUDWidget* HUDWidget = nullptr;
-    
-    UPROPERTY()
-    UCombatSubsystem* CombatSS;
-
-    UPROPERTY()
-    UShopSubsystem* ShopSS;
-
-    UPROPERTY()
-    ATFTPlayerState* PS;
 
     UFUNCTION()
     void StartGame();
