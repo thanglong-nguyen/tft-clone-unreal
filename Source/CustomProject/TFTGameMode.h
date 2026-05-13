@@ -26,6 +26,9 @@ public:
     UPROPERTY()
     ABattlefieldActor* Battlefield;
     
+    UPROPERTY(EditAnywhere, Category="UI")
+    TSubclassOf<UUnitStateWidget> StateWidgetClass;
+    
     // Assign WBP_HUD here in BP_TFTGameMode
     UPROPERTY(EditAnywhere, Category="UI")
     TSubclassOf<UTFTHUDWidget> HUDWidgetClass;

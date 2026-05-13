@@ -15,6 +15,11 @@ AUnit::AUnit()
     GetMesh()->SetupAttachment(GetCapsuleComponent());
     GetMesh()->SetRelativeLocation(FVector(0.f, 0.f, -90.f));
     GetMesh()->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
+    
+    StateWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("StateWidget"));
+    StateWidgetComp->AttachToComponent(RootComponent, 
+        FAttachmentTransformRules::KeepRelativeTransform);
+    StateWidgetComp->SetWidgetSpace(EWidgetSpace::Screen); // always faces camera
 }
 
 void AUnit::BeginPlay()
@@ -64,6 +69,19 @@ void AUnit::InitFromDataAsset()
         GetMesh()->SetRelativeLocation(FVector(0.f, 0.f, -90.f));
         GetMesh()->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
     }
+    
+    if (StateWidgetComp && StateWidgetClass)
+    {
+        StateWidgetComp->SetWidgetClass(StateWidgetClass);
+        
+        StateWidget = Cast<UUnitStateWidget>(StateWidgetComp->GetUserWidgetObject());
+        
+        if (StateWidget)
+        {
+            StateWidget->Owner = this;
+            StateWidget->UpdateValues();
+        }
+    }
 }
 
 // -------------------------------------------------------
@@ -105,6 +123,9 @@ void AUnit::CombatTick(float DeltaTime)
         CurrentState = EUnitState::Moving;
         MoveToTarget();
     }
+    
+    if (StateWidget)
+        StateWidget->UpdateValues();
 }
 
 void AUnit::FindAndSetTarget(const TArray<AUnit*>& EnemyUnits)
@@ -213,4 +234,7 @@ void AUnit::ResetForNewRound()
     // Make the unit visible and collidable again
     SetActorHiddenInGame(false);
     SetActorEnableCollision(true);
+    
+    if (StateWidget)
+        StateWidget->UpdateValues();
 }

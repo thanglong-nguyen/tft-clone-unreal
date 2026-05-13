@@ -43,6 +43,7 @@ void ATFTGameMode::StartGame()
     if (PS)
     {
         PS->TFTGameMode = this;
+        PS->AddGold(10);
     }
     
     if (CombatSS)
@@ -141,6 +142,7 @@ void ATFTGameMode::OnPhaseChanged(EGamePhase NewPhase)
                 if (!Enemy) continue;
 
                 Enemy->DataAsset = Data;
+                Enemy->StateWidgetClass = StateWidgetClass;
                 Enemy->InitFromDataAsset();
                 Enemy->GridCol = Col;
                 Enemy->GridRow = Row;

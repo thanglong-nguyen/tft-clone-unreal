@@ -1,7 +1,9 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "UnitDataAsset.h"
+#include "Components/WidgetComponent.h"
 #include "GameFramework/Character.h"
+#include "UI/UnitStateWidget.h"
 #include "Unit.generated.h"
 
 // Represents what the unit is currently doing
@@ -83,6 +85,15 @@ public:
     // -------------------------------------------------------
     // State
     // -------------------------------------------------------
+    
+    UPROPERTY(EditAnywhere)
+    UWidgetComponent* StateWidgetComp;
+    
+    UPROPERTY(EditAnywhere, Category="UI")
+    TSubclassOf<UUnitStateWidget> StateWidgetClass;
+	
+    UPROPERTY(EditAnywhere)
+    UUnitStateWidget* StateWidget;
 
     // What the unit is currently doing — read by animation BP
     UPROPERTY(BlueprintReadOnly, Category="Combat")
