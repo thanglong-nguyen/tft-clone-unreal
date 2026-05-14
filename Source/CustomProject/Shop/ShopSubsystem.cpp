@@ -181,7 +181,7 @@ bool UShopSubsystem::BuyUnit(int32 SlotIndex)
             PurchasedUnit->DataAsset = Slot.Data;
             PurchasedUnit->StateWidgetClass = TFTGameMode->StateWidgetClass;
             PurchasedUnit->InitFromDataAsset();
-
+            PurchasedUnit->SetStateWidget();
             // Add to bench and mark slot as sold
             PS->BenchUnits.Add(PurchasedUnit);
             CurrentShop[SlotIndex].bIsPurchased = true;

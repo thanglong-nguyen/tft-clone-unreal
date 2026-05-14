@@ -150,6 +150,7 @@ void ATFTGameMode::OnPhaseChanged(EGamePhase NewPhase)
                 Enemy->DataAsset = Data;
                 Enemy->StateWidgetClass = StateWidgetClass;
                 Enemy->InitFromDataAsset();
+                Enemy->SetStateWidget();
                 Enemy->GridCol = Col;
                 Enemy->GridRow = Row;
                 Battlefield->OccupyEnemyCell(Col, Row);

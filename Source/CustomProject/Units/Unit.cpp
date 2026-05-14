@@ -20,6 +20,12 @@ AUnit::AUnit()
     StateWidgetComp->AttachToComponent(RootComponent, 
         FAttachmentTransformRules::KeepRelativeTransform);
     StateWidgetComp->SetWidgetSpace(EWidgetSpace::Screen); // always faces camera
+    StateWidgetComp->SetDrawSize(FVector2D(150.f, 40.f));
+    
+    StateWidgetComp->SetupAttachment(GetMesh(), FName("head"));
+
+    // Add a small upward offset so it sits *above* the skull, not inside it
+    StateWidgetComp->SetRelativeLocation(FVector(0.f, 0.f, 30.f)); 
 }
 
 void AUnit::BeginPlay()
@@ -69,7 +75,10 @@ void AUnit::InitFromDataAsset()
         GetMesh()->SetRelativeLocation(FVector(0.f, 0.f, -90.f));
         GetMesh()->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
     }
-    
+}
+
+void AUnit::SetStateWidget()
+{
     if (StateWidgetComp && StateWidgetClass)
     {
         StateWidgetComp->SetWidgetClass(StateWidgetClass);
