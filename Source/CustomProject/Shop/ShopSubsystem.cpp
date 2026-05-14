@@ -2,6 +2,7 @@
 #include "Units/Unit.h"
 #include "Units/UnitDataAsset.h"
 #include "Player/TFTPlayerState.h"
+#include "TFTGameMode.h"
 #include "Engine/World.h"
 
 void UShopSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -178,6 +179,7 @@ bool UShopSubsystem::BuyUnit(int32 SlotIndex)
 
             // Load stats and mesh from the data asset
             PurchasedUnit->DataAsset = Slot.Data;
+            PurchasedUnit->StateWidgetClass = TFTGameMode->StateWidgetClass;
             PurchasedUnit->InitFromDataAsset();
 
             // Add to bench and mark slot as sold

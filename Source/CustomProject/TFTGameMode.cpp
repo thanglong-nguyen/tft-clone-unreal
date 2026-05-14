@@ -46,6 +46,12 @@ void ATFTGameMode::StartGame()
         PS->AddGold(10);
     }
     
+    
+    if (ShopSS)
+    {
+        ShopSS->TFTGameMode = this;
+    }
+    
     if (CombatSS)
     {
         CombatSS->TFTGameMode = this;

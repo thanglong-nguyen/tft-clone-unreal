@@ -4,6 +4,7 @@
 #include "Units/Unit.h"
 #include "ShopSubsystem.generated.h"
 
+class ATFTGameMode;
 class UUnitDataAsset;
 
 // Represents one slot in the shop
@@ -33,6 +34,9 @@ class CUSTOMPROJECT_API UShopSubsystem : public UGameInstanceSubsystem
     GENERATED_BODY()
 
 public:
+    UPROPERTY()
+    ATFTGameMode* TFTGameMode;
+    
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
     // Number of slots shown in the shop each round
