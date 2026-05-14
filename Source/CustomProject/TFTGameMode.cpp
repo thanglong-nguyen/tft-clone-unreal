@@ -151,6 +151,13 @@ void ATFTGameMode::OnPhaseChanged(EGamePhase NewPhase)
                 Enemy->StateWidgetClass = StateWidgetClass;
                 Enemy->InitFromDataAsset();
                 Enemy->SetStateWidget();
+                
+                if (Enemy->StateWidget)
+                {
+                    FLinearColor HealthColor = FLinearColor::Red;
+                    Enemy->StateWidget->HealthBar->SetFillColorAndOpacity(HealthColor);
+                }
+                
                 Enemy->GridCol = Col;
                 Enemy->GridRow = Row;
                 Battlefield->OccupyEnemyCell(Col, Row);

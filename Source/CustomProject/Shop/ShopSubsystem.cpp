@@ -182,6 +182,13 @@ bool UShopSubsystem::BuyUnit(int32 SlotIndex)
             PurchasedUnit->StateWidgetClass = TFTGameMode->StateWidgetClass;
             PurchasedUnit->InitFromDataAsset();
             PurchasedUnit->SetStateWidget();
+            
+            if (PurchasedUnit->StateWidget)
+            {
+                FLinearColor HealthColor = FLinearColor::Green;
+                PurchasedUnit->StateWidget->HealthBar->SetFillColorAndOpacity(HealthColor);
+            }
+            
             // Add to bench and mark slot as sold
             PS->BenchUnits.Add(PurchasedUnit);
             CurrentShop[SlotIndex].bIsPurchased = true;
