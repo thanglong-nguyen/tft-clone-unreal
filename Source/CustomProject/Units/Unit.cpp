@@ -10,6 +10,10 @@ AUnit::AUnit()
 
     // Spawn an AI controller automatically so we can call MoveToActor
     AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+    
+    GetCharacterMovement()->bUseRVOAvoidance = true;
+    GetCharacterMovement()->AvoidanceWeight = 0.5f;
+    GetCharacterMovement()->SetAvoidanceEnabled(true);
 
     // Position the mesh inside the capsule correctly
     GetMesh()->SetupAttachment(GetCapsuleComponent());
