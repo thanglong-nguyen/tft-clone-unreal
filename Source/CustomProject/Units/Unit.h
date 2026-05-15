@@ -38,6 +38,8 @@ public:
     // Loads all stats and mesh from the assigned DataAsset
     // Called automatically in BeginPlay and ResetForNewRound
     void InitFromDataAsset();
+    
+    void SetStateWidget();
 
     // -------------------------------------------------------
     // Identity

@@ -46,6 +46,12 @@ void ATFTGameMode::StartGame()
         PS->AddGold(10);
     }
     
+    
+    if (ShopSS)
+    {
+        ShopSS->TFTGameMode = this;
+    }
+    
     if (CombatSS)
     {
         CombatSS->TFTGameMode = this;
@@ -144,6 +150,14 @@ void ATFTGameMode::OnPhaseChanged(EGamePhase NewPhase)
                 Enemy->DataAsset = Data;
                 Enemy->StateWidgetClass = StateWidgetClass;
                 Enemy->InitFromDataAsset();
+                Enemy->SetStateWidget();
+                
+                if (Enemy->StateWidget)
+                {
+                    FLinearColor HealthColor = FLinearColor::Red;
+                    Enemy->StateWidget->HealthBar->SetFillColorAndOpacity(HealthColor);
+                }
+                
                 Enemy->GridCol = Col;
                 Enemy->GridRow = Row;
                 Battlefield->OccupyEnemyCell(Col, Row);
