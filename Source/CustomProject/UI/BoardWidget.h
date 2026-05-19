@@ -6,6 +6,8 @@
 class ATFTGameMode;
 class UVerticalBox;
 class UHorizontalBox;
+class UUniformGridPanel;
+class UBoardCellWidget;
 
 UCLASS()
 class CUSTOMPROJECT_API UBoardWidget : public UUserWidget
@@ -27,6 +29,9 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
 	UHorizontalBox* BenchContainer;
+	
+	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UUniformGridPanel* BoardGrid;
 
 	// -------------------------------------------------------
 	// Classes to spawn dynamically — set in WBP_BoardWidget
@@ -34,6 +39,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category="Board")
 	TSubclassOf<class USynergyCard> SynergyCardClass;
+	
+	UPROPERTY(EditAnywhere, Category="Board")
+    TSubclassOf<UBoardCellWidget> BoardCellClass;
 
 	UPROPERTY(EditAnywhere, Category="Board")
 	TSubclassOf<class UUnitCard> UnitCardClass;
@@ -49,6 +57,14 @@ public:
 	// Rebuilds bench cards from player bench units
 	UFUNCTION(BlueprintCallable)
 	void RefreshBench();
+	
+	void BuildBoardGrid();
+	
+	// Find a cell widget by grid coordinates and clear it
+	void ClearCell(int32 Col, int32 Row);
+
+	// Find a cell widget by grid coordinates  
+	UBoardCellWidget* GetCellWidget(int32 Col, int32 Row);
 
 private:
 	void BindDelegates();
