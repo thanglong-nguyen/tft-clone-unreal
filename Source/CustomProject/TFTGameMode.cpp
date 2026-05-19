@@ -6,6 +6,7 @@
 #include "Units/UnitDataAsset.h"
 #include "Blueprint/UserWidget.h"
 #include "Combat/BattlefieldActor.h"
+#include "UI/BoardWidget.h"
 
 void ATFTGameMode::BeginPlay()
 {
@@ -57,6 +58,20 @@ void ATFTGameMode::StartGame()
         CombatSS->TFTGameMode = this;
         CombatSS->OnPhaseChanged.AddDynamic(this, &ATFTGameMode::OnPhaseChanged);
         CombatSS->StartPrepPhase();
+    }
+    
+    if (BoardWidgetClass)
+    {
+        if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+        {
+            BoardWidget = CreateWidget<UBoardWidget>(PC, BoardWidgetClass);
+            if (BoardWidget)
+            {
+                BoardWidget->TFTGameMode = this;
+                BoardWidget->AddToPlayerScreen();
+                BoardWidget->SetVisibility(ESlateVisibility::Hidden);
+            }
+        }
     }
 
     if (HUDWidgetClass)

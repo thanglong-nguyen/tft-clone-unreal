@@ -6,6 +6,8 @@
 #include "Combat/BattlefieldActor.h"
 #include "TFTGameMode.generated.h"
 
+class UBoardWidget;
+
 UCLASS()
 class CUSTOMPROJECT_API ATFTGameMode : public AGameModeBase
 {
@@ -25,6 +27,12 @@ public:
     
     UPROPERTY()
     ABattlefieldActor* Battlefield;
+    
+    UPROPERTY()
+    UBoardWidget* BoardWidget;
+    
+    UPROPERTY(EditAnywhere, Category="UI")
+    TSubclassOf<UBoardWidget> BoardWidgetClass;
     
     UPROPERTY(EditAnywhere, Category="UI")
     TSubclassOf<UUnitStateWidget> StateWidgetClass;
