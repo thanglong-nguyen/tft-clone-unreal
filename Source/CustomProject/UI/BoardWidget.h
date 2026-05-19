@@ -36,7 +36,7 @@ public:
 	TSubclassOf<class USynergyCard> SynergyCardClass;
 
 	UPROPERTY(EditAnywhere, Category="Board")
-	TSubclassOf<class UBenchUnitCard> BenchUnitCardClass;
+	TSubclassOf<class UUnitCard> UnitCardClass;
 
 	// -------------------------------------------------------
 	// Public Refresh Functions

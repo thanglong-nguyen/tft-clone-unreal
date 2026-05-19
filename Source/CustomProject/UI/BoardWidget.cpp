@@ -2,6 +2,7 @@
 #include "UI/SynergyCard.h"
 #include "BenchUnitCard.h"
 #include "TFTGameMode.h"
+#include "UnitCard.h"
 #include "Traits/TraitSubsystem.h"
 #include "Shop/ShopSubsystem.h"
 #include "Player/TFTPlayerState.h"
@@ -60,19 +61,17 @@ void UBoardWidget::RefreshSynergies()
 
 void UBoardWidget::RefreshBench()
 {
-    if (!BenchContainer || !BenchUnitCardClass || !TFTGameMode->PS) return;
-
+    if (!BenchContainer || !TFTGameMode->PS) return;
     BenchContainer->ClearChildren();
 
     for (AUnit* Unit : TFTGameMode->PS->BenchUnits)
     {
         if (!Unit) continue;
 
-        UBenchUnitCard* Card = CreateWidget<UBenchUnitCard>(
-            this, BenchUnitCardClass);
+        UUnitCard* Card = CreateWidget<UUnitCard>(this, UnitCardClass);
         if (!Card) continue;
-        
-        Card->SetUnit(Unit);
+
+        Card->SetUnit(Unit, false); // false = on bench
         BenchContainer->AddChild(Card);
     }
 }
