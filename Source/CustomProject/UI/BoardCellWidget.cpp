@@ -90,6 +90,7 @@ bool UBoardCellWidget::NativeOnDrop(
 
     if (!PS || !BF) return false;
     if (!BF->IsPlayerCellFree(Col, Row)) return false;
+    if (TFTGameMode->CombatSS->CurrentPhase != EGamePhase::Prep) return false;
     
 
     // Free old cell if coming from board
