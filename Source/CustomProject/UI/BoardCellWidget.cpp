@@ -73,12 +73,20 @@ bool UBoardCellWidget::NativeOnDragOver(
     const FDragDropEvent& InDragDropEvent,
     UDragDropOperation* InOperation)
 {
-    if (Cast<UUnitDragDrop>(InOperation))
+    if (!Cast<UUnitDragDrop>(InOperation)) return false;
+
+    // Red highlight during combat — can't place
+    if (TFTGameMode && 
+        TFTGameMode->CombatSS->GetCurrentPhase() != EGamePhase::Prep)
     {
-        SetHighlight(true);
+        if (CellBackground)
+            CellBackground->SetColorAndOpacity(
+                FLinearColor(1.f, 0.f, 0.f, 0.3f));
         return true;
     }
-    return false;
+
+    SetHighlight(true);
+    return true;
 }
 
 void UBoardCellWidget::NativeOnDragLeave(
@@ -95,6 +103,13 @@ bool UBoardCellWidget::NativeOnDrop(
 {
     UUnitDragDrop* DragOp = Cast<UUnitDragDrop>(InOperation);
     if (!DragOp || !DragOp->DraggedUnit || !TFTGameMode) return false;
+    
+    // Block placement during combat and result phases
+    if (TFTGameMode->CombatSS->GetCurrentPhase() != EGamePhase::Prep)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Cannot place units outside prep phase"));
+        return false;
+    }
 
     AUnit* Unit             = DragOp->DraggedUnit;
     ATFTPlayerState* PS     = TFTGameMode->PS;
