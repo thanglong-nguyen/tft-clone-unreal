@@ -140,8 +140,7 @@ bool ATFTPlayerState::SpendGold(int32 Amount)
 
 void ATFTPlayerState::CheckForMerge(FName UnitName)
 {
-    // TODO: Find all copies of this unit across board and bench
-    // HINT: Call FindAllCopies
+    if (TFTGameMode->CombatSS->CurrentPhase != EGamePhase::Prep) return;
     
     TArray<AUnit*> Copies1 = FindAllCopies(UnitName);
     
