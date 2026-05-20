@@ -117,10 +117,6 @@ void ATFTGameMode::OnPhaseChanged(EGamePhase NewPhase)
     switch (NewPhase)
     {
         case EGamePhase::Prep:
-            for (AUnit* Unit : PS->BoardUnits)
-            {
-                CombatSS->RegisterPlayerUnit(Unit);
-            }
             break;
         
         
@@ -129,6 +125,11 @@ void ATFTGameMode::OnPhaseChanged(EGamePhase NewPhase)
             if (!CombatSS || !Battlefield) return;
         
             if (!PS) return;
+        
+            for (AUnit* Unit : PS->BoardUnits)
+            {
+                CombatSS->RegisterPlayerUnit(Unit);
+            }
         
             while (PS->CanPlaceOnBoard() && PS->BenchUnits.Num() > 0)
             {
