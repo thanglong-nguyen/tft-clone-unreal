@@ -31,6 +31,9 @@ public:
     UPROPERTY()
     UBoardWidget* BoardWidget;
     
+    UPROPERTY()
+    UTFTHUDWidget* HUDWidget;
+    
     UPROPERTY(EditAnywhere, Category="UI")
     TSubclassOf<UBoardWidget> BoardWidgetClass;
     
@@ -50,8 +53,6 @@ public:
     TArray<UUnitDataAsset*> EnemyUnitPool;
 
 private:
-    UPROPERTY()
-    UTFTHUDWidget* HUDWidget = nullptr;
 
     UFUNCTION()
     void StartGame();
