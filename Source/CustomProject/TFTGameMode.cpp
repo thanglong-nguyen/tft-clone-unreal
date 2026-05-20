@@ -117,6 +117,17 @@ void ATFTGameMode::OnPhaseChanged(EGamePhase NewPhase)
     switch (NewPhase)
     {
         case EGamePhase::Prep:
+        
+            for (AUnit* Unit: PS->BoardUnits)
+            {
+                PS->CheckForMerge(Unit->UnitName);
+            }
+        
+            for (AUnit* Unit: PS->BenchUnits)
+            {
+                PS->CheckForMerge(Unit->UnitName);
+            }
+        
             break;
         
         
