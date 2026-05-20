@@ -9,6 +9,7 @@
 #include "Components/ProgressBar.h"
 #include "Components/HorizontalBox.h"
 #include "Components/Button.h"
+#include "UI/BoardWidget.h"
 
 void UTFTHUDWidget::NativeConstruct()
 {
@@ -32,6 +33,10 @@ void UTFTHUDWidget::NativeConstruct()
         BuyXPButton->OnClicked.AddDynamic(this, &UTFTHUDWidget::OnBuyXPClicked);
         BuyXPText -> SetText(FText::FromString("Buy XP: 4g"));
     }
+    
+    if (ToggleBoardButton)
+        ToggleBoardButton->OnClicked.AddDynamic(
+            this, &UTFTHUDWidget::OnToggleBoardClicked);
         
 }
 
@@ -185,6 +190,16 @@ void UTFTHUDWidget::OnBuyXPClicked()
     UpdateGold();
 }
 
+void UTFTHUDWidget::OnToggleBoardClicked()
+{
+    if (!TFTGameMode || !TFTGameMode->BoardWidget) return;
+
+    UBoardWidget* Board = TFTGameMode->BoardWidget;
+    
+    this->SetVisibility(ESlateVisibility::Hidden);
+    Board->SetVisibility(ESlateVisibility::Visible);
+}
+
 // -------------------------------------------------------
 // Delegate Handlers
 // -------------------------------------------------------
@@ -193,6 +208,9 @@ void UTFTHUDWidget::HandlePhaseChanged(EGamePhase NewPhase)
 {
     UpdatePhase();
     UpdateTimer();
+    
+    if (ToggleBoardButton)
+        ToggleBoardButton->SetIsEnabled(true);
 }
 
 void UTFTHUDWidget::HandleRoundChanged(int32 NewRound)

@@ -66,6 +66,9 @@ public:
     UButton* BuyXPButton;
     
     UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+    UButton* ToggleBoardButton;
+    
+    UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
     UTextBlock* RerollText; 
     
     UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
@@ -76,6 +79,9 @@ public:
 
     UFUNCTION()
     void OnBuyXPClicked();
+    
+    UFUNCTION()
+    void OnToggleBoardClicked();
 
     // -------------------------------------------------------
     // Update Functions
