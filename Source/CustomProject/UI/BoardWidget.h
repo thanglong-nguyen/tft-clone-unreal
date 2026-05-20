@@ -3,6 +3,7 @@
 #include "Blueprint/UserWidget.h"
 #include "BoardWidget.generated.h"
 
+class UButton;
 class ATFTGameMode;
 class UVerticalBox;
 class UHorizontalBox;
@@ -32,6 +33,9 @@ public:
 	
 	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
 	UUniformGridPanel* BoardGrid;
+	
+	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UButton* ToggleHUDButton;
 
 	// -------------------------------------------------------
 	// Classes to spawn dynamically — set in WBP_BoardWidget
@@ -65,6 +69,9 @@ public:
 
 	// Find a cell widget by grid coordinates  
 	UBoardCellWidget* GetCellWidget(int32 Col, int32 Row);
+	
+	UFUNCTION()
+	void OnToggleHUDClicked();
 
 private:
 	void BindDelegates();

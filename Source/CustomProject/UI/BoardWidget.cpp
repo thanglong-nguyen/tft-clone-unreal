@@ -9,6 +9,9 @@
 #include "Player/TFTPlayerState.h"
 #include "Components/VerticalBox.h"
 #include "Components/HorizontalBox.h"
+#include "Components/UniformGridSlot.h"
+#include "Components/Button.h"
+#include "Components/HorizontalBoxSlot.h"
 
 void UBoardWidget::NativeConstruct()
 {
@@ -17,6 +20,10 @@ void UBoardWidget::NativeConstruct()
     BuildBoardGrid();
     RefreshBench();
     RefreshSynergies();
+    
+    if (ToggleHUDButton)
+        ToggleHUDButton->OnClicked.AddDynamic(
+            this, &UBoardWidget::OnToggleHUDClicked);
 }
 
 void UBoardWidget::BuildBoardGrid()
@@ -27,7 +34,7 @@ void UBoardWidget::BuildBoardGrid()
 
     // Match battlefield dimensions
     int32 Columns = 4;
-    int32 Rows    = 8;
+    int32 Rows    = 4;
 
     for (int32 Row = 0; Row < Rows; Row++)
     {
@@ -35,6 +42,7 @@ void UBoardWidget::BuildBoardGrid()
         {
             UBoardCellWidget* Cell = CreateWidget<UBoardCellWidget>(
                 this, BoardCellClass);
+            
             if (!Cell) continue;
 
             Cell->TFTGameMode = TFTGameMode;
@@ -42,7 +50,16 @@ void UBoardWidget::BuildBoardGrid()
             Cell->Row         = Row;
 
             // Add to grid at correct position
-            BoardGrid->AddChildToUniformGrid(Cell, Row, Col);
+            // BoardGrid->AddChildToUniformGrid(Cell, Row, Col);
+            
+            UUniformGridSlot* GridSlot = BoardGrid->AddChildToUniformGrid(Cell, Row, Col);
+            if (GridSlot)
+            {
+                GridSlot->SetColumn(Col);
+                GridSlot->SetRow(Row);
+                GridSlot->SetHorizontalAlignment(HAlign_Fill);
+                GridSlot->SetVerticalAlignment(VAlign_Fill);
+            }
 
             // // If a unit already occupies this cell show it
             // if (TFTGameMode->PS)
@@ -130,6 +147,16 @@ UBoardCellWidget* UBoardWidget::GetCellWidget(int32 Col, int32 Row)
     int32 Index   = Col + Row * Columns;
 
     return Cast<UBoardCellWidget>(BoardGrid->GetChildAt(Index));
+}
+
+void UBoardWidget::OnToggleHUDClicked()
+{
+    if (!TFTGameMode || !TFTGameMode->HUDWidget) return;
+
+    UTFTHUDWidget* HUD = TFTGameMode->HUDWidget;
+    
+    this->SetVisibility(ESlateVisibility::Hidden);
+    HUD->SetVisibility(ESlateVisibility::Visible);
 }
 
 void UBoardWidget::ClearCell(int32 Col, int32 Row)
