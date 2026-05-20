@@ -33,6 +33,9 @@ public:
     
     UPROPERTY()
     ATFTGameMode* TFTGameMode;
+    
+    // Current phase of the game loop
+    EGamePhase CurrentPhase;
 
     // -------------------------------------------------------
     // Phase Control
@@ -108,9 +111,6 @@ private:
     // -------------------------------------------------------
     // State
     // -------------------------------------------------------
-
-    // Current phase of the game loop
-    EGamePhase CurrentPhase;
 
     // Which round we are on
     int32 CurrentRound;
