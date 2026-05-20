@@ -25,10 +25,6 @@ public:
     UPROPERTY(BlueprintReadWrite)
     int32 Row = 0;
 
-    // Unit currently sitting on this cell
-    UPROPERTY()
-    AUnit* OccupyingUnit = nullptr;
-
     // -------------------------------------------------------
     // Widget Bindings
     // -------------------------------------------------------
@@ -59,14 +55,6 @@ public:
     void SetHighlight(bool bHighlight);
 
 protected:
-    virtual FReply NativeOnMouseButtonDown(
-        const FGeometry& InGeometry,
-        const FPointerEvent& InMouseEvent) override;
-
-    virtual void NativeOnDragDetected(
-        const FGeometry& InGeometry,
-        const FPointerEvent& InMouseEvent,
-        UDragDropOperation*& OutOperation) override;
 
     virtual bool NativeOnDrop(
         const FGeometry& InGeometry,

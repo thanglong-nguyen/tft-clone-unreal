@@ -24,8 +24,6 @@ void UBoardCellWidget::PlaceUnit(AUnit* Unit)
     Card->SetUnit(Unit, true); // true = on board
     CardSlot->AddChild(Card);
 
-    OccupyingUnit = Unit;
-
     // Blue tint when occupied
     if (CellBackground)
         CellBackground->SetColorAndOpacity(
@@ -35,7 +33,6 @@ void UBoardCellWidget::PlaceUnit(AUnit* Unit)
 void UBoardCellWidget::ClearUnit()
 {
     if (CardSlot) CardSlot->ClearChildren();
-    OccupyingUnit = nullptr;
 
     if (CellBackground)
         CellBackground->SetColorAndOpacity(
@@ -45,27 +42,10 @@ void UBoardCellWidget::ClearUnit()
 void UBoardCellWidget::SetHighlight(bool bHighlight)
 {
     if (!CellBackground) return;
-    if (OccupyingUnit) return; // don't override occupied tint
 
     CellBackground->SetColorAndOpacity(bHighlight
         ? FLinearColor(0.f, 1.f, 0.f, 0.4f)
         : FLinearColor(1.f, 1.f, 1.f, 0.1f));
-}
-
-FReply UBoardCellWidget::NativeOnMouseButtonDown(
-    const FGeometry& InGeometry,
-    const FPointerEvent& InMouseEvent)
-{
-    // Cell itself isn't draggable — the UnitCard inside handles dragging
-    return FReply::Unhandled();
-}
-
-void UBoardCellWidget::NativeOnDragDetected(
-    const FGeometry& InGeometry,
-    const FPointerEvent& InMouseEvent,
-    UDragDropOperation*& OutOperation)
-{
-    // Drag is handled by UnitCard not the cell
 }
 
 bool UBoardCellWidget::NativeOnDragOver(
@@ -104,19 +84,13 @@ bool UBoardCellWidget::NativeOnDrop(
     UUnitDragDrop* DragOp = Cast<UUnitDragDrop>(InOperation);
     if (!DragOp || !DragOp->DraggedUnit || !TFTGameMode) return false;
     
-    // Block placement during combat and result phases
-    if (TFTGameMode->CombatSS->GetCurrentPhase() != EGamePhase::Prep)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Cannot place units outside prep phase"));
-        return false;
-    }
-
     AUnit* Unit             = DragOp->DraggedUnit;
     ATFTPlayerState* PS     = TFTGameMode->PS;
     ABattlefieldActor* BF   = TFTGameMode->Battlefield;
 
     if (!PS || !BF) return false;
     if (!BF->IsPlayerCellFree(Col, Row)) return false;
+    
 
     // Free old cell if coming from board
     if (DragOp->bFromBoard && Unit->GridCol >= 0)
@@ -130,6 +104,7 @@ bool UBoardCellWidget::NativeOnDrop(
     else
     {
         // Coming from bench
+        if (!PS->CanPlaceOnBoard()) return false;
         PS->BenchUnits.Remove(Unit);
         if (TFTGameMode->BoardWidget)
             TFTGameMode->BoardWidget->RefreshBench();
