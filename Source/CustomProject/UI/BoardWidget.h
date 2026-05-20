@@ -70,8 +70,14 @@ public:
 	// Find a cell widget by grid coordinates  
 	UBoardCellWidget* GetCellWidget(int32 Col, int32 Row);
 	
+	    
+	UFUNCTION()
+	void HandleUnitsMerged(int32 Col, int32 Row);
+	
 	UFUNCTION()
 	void OnToggleHUDClicked();
+	
+	void RebuildOccupiedCells();
 
 private:
 	void BindDelegates();

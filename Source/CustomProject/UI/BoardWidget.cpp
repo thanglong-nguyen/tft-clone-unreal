@@ -89,6 +89,10 @@ void UBoardWidget::BindDelegates()
     if (TFTGameMode->ShopSS)
         TFTGameMode->ShopSS->OnUnitPurchased.AddDynamic(
             this, &UBoardWidget::HandleUnitPurchased);
+    
+    if (TFTGameMode->PS)
+        TFTGameMode->PS->OnUnitsMerged.AddDynamic(
+            this, &UBoardWidget::HandleUnitsMerged);
 }
 
 void UBoardWidget::RefreshSynergies()
@@ -165,6 +169,27 @@ void UBoardWidget::ClearCell(int32 Col, int32 Row)
     if (!Cell) return;
 
     Cell->ClearUnit();
+}
+
+void UBoardWidget::HandleUnitsMerged(int32 Col, int32 Row)
+{
+    ClearCell(Col, Row);
+    
+    RebuildOccupiedCells();
+    RefreshBench();
+}
+
+void UBoardWidget::RebuildOccupiedCells()
+{
+    if (!TFTGameMode->PS) return;
+    
+    for (AUnit* Unit : TFTGameMode->PS->BoardUnits)
+    {
+        if (!Unit || Unit->GridCol < 0) continue;
+        
+        UBoardCellWidget* Cell = GetCellWidget(Unit->GridCol, Unit->GridRow);
+        if (Cell) Cell->PlaceUnit(Unit);
+    }
 }
 
 void UBoardWidget::HandleTraitsUpdated()
