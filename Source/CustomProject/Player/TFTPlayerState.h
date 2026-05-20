@@ -8,6 +8,9 @@ class ATFTGameMode;
 // Fired when the player levels up
 // UI listens to this to update the level display
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnLevelUp, int32, NewLevel, int32, BoardCapacity);
+// Fired after a merge — passes the two destroyed units' grid positions
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnUnitsMerged, int32, Col1, int32, Row1);
+
 
 UCLASS()
 class CUSTOMPROJECT_API ATFTPlayerState : public APlayerState
@@ -99,6 +102,9 @@ public:
 
     UPROPERTY(BlueprintAssignable, Category="Level")
     FOnLevelUp OnLevelUp;
+    
+    UPROPERTY(BlueprintAssignable)
+    FOnUnitsMerged OnUnitsMerged;
 
 private:
     // Maximum level a player can reach

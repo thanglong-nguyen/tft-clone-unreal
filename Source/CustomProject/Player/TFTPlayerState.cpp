@@ -204,10 +204,15 @@ void ATFTPlayerState::MergeUnits(TArray<AUnit*>& Copies)
         
         BoardUnits.Remove(ToRemove1);
         BenchUnits.Remove(ToRemove1);
+        if (ToRemove1->GridCol >= 0)
+            OnUnitsMerged.Broadcast(ToRemove1->GridCol, ToRemove1->GridRow);
         ToRemove1->Destroy();
         
         BoardUnits.Remove(ToRemove2);
         BenchUnits.Remove(ToRemove2);
+        if (ToRemove2->GridCol >= 0)
+            OnUnitsMerged.Broadcast(ToRemove2->GridCol, ToRemove2->GridRow);
+        
         ToRemove2->Destroy();
         
         Copies.RemoveAt(2);
