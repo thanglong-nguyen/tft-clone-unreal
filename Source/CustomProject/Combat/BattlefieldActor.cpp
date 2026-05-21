@@ -26,22 +26,20 @@ void ABattlefieldActor::InitGrids()
 
 FVector ABattlefieldActor::GetPlayerCellPosition(int32 Col, int32 Row) const
 {
-    // Player side — positive X
     FVector Origin = GetActorLocation();
     return Origin + FVector(
-        -(Col + 1) * CellSize,           // positive X = player side
-        (Row - Rows / 2.f) * CellSize,  // centered on Y axis
+        - (Row + 1 )* CellSize,                          // rows go forward/back (X)
+        (Col - Columns / 2.f) * CellSize,        // cols go left/right (Y)
         0.f
     );
 }
 
 FVector ABattlefieldActor::GetEnemyCellPosition(int32 Col, int32 Row) const
 {
-    // Enemy side — negative X
     FVector Origin = GetActorLocation();
     return Origin + FVector(
-        (Col + 1) * CellSize,          // negative X = enemy side
-        (Row - Rows / 2.f) * CellSize,  // centered on Y axis
+        (Row + 1) * CellSize,                       // enemy side negative X
+        (Col - Columns / 2.f) * CellSize,        // cols go left/right (Y)
         0.f
     );
 }
