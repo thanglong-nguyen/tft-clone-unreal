@@ -75,6 +75,9 @@ public:
 	void HandleUnitsMerged(int32 Col, int32 Row);
 	
 	UFUNCTION()
+	void HandleUnitPlaced(AUnit* PlacedUnit);
+	
+	UFUNCTION()
 	void OnToggleHUDClicked();
 	
 	void RebuildOccupiedCells();

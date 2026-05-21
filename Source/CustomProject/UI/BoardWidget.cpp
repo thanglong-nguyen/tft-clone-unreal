@@ -93,6 +93,8 @@ void UBoardWidget::BindDelegates()
     if (TFTGameMode->PS)
         TFTGameMode->PS->OnUnitsMerged.AddDynamic(
             this, &UBoardWidget::HandleUnitsMerged);
+        TFTGameMode->PS->OnUnitPlaced.AddDynamic(
+        this, &UBoardWidget::HandleUnitPlaced);
 }
 
 void UBoardWidget::RefreshSynergies()
@@ -177,6 +179,17 @@ void UBoardWidget::HandleUnitsMerged(int32 Col, int32 Row)
     
     RebuildOccupiedCells();
     RefreshBench();
+}
+
+void UBoardWidget::HandleUnitPlaced(AUnit* PlacedUnit)
+{
+    if (!PlacedUnit) return;
+
+    UBoardCellWidget* Cell = GetCellWidget(PlacedUnit->GridCol, PlacedUnit->GridRow);
+    if (Cell) Cell->PlaceUnit(PlacedUnit);
+
+    RefreshBench();
+    RefreshSynergies();
 }
 
 void UBoardWidget::RebuildOccupiedCells()
