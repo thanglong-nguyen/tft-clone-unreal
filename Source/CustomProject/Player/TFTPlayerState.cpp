@@ -247,6 +247,7 @@ void ATFTPlayerState::TryAutoPlace(AUnit* Unit)
         Unit->GridRow = Row;
 
         MoveToBoard(Unit);
+        OnUnitPlaced.Broadcast(Unit);
 
         UE_LOG(LogTemp, Log, TEXT("Auto-placed %s at cell [%d,%d]"),
             *Unit->UnitName.ToString(), Col, Row);

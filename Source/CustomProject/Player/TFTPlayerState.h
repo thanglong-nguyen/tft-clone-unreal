@@ -10,6 +10,7 @@ class ATFTGameMode;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnLevelUp, int32, NewLevel, int32, BoardCapacity);
 // Fired after a merge — passes the two destroyed units' grid positions
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnUnitsMerged, int32, Col1, int32, Row1);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUnitPlaced, AUnit*, PlacedUnit);
 
 
 UCLASS()
@@ -105,6 +106,9 @@ public:
     
     UPROPERTY(BlueprintAssignable)
     FOnUnitsMerged OnUnitsMerged;
+    
+    UPROPERTY(BlueprintAssignable)
+    FOnUnitPlaced OnUnitPlaced;
 
 private:
     // Maximum level a player can reach
