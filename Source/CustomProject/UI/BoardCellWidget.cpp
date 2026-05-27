@@ -83,24 +83,56 @@ bool UBoardCellWidget::NativeOnDrop(
 {
     UUnitDragDrop* DragOp = Cast<UUnitDragDrop>(InOperation);
     if (!DragOp || !DragOp->DraggedUnit || !TFTGameMode) return false;
-    
-    AUnit* Unit             = DragOp->DraggedUnit;
-    ATFTPlayerState* PS     = TFTGameMode->PS;
-    ABattlefieldActor* BF   = TFTGameMode->Battlefield;
 
-    if (!PS || !BF) return false;
+    AUnit* Unit           = DragOp->DraggedUnit;
+    ATFTPlayerState* PS   = TFTGameMode->PS;
+    ABattlefieldActor* BF = TFTGameMode->Battlefield;
+
+    if (!PS) return false;
+
+    // -------------------------------------------------------
+    // Bench drop
+    // -------------------------------------------------------
+    if (bIsBenchCell)
+    {
+        if (OccupyingUnit) return false; // slot taken
+
+        // Free board cell if coming from board
+        if (DragOp->bFromBoard && Unit->GridCol >= 0 && BF)
+        {
+            BF->FreePlayerCell(Unit->GridCol, Unit->GridRow);
+            if (TFTGameMode->BoardWidget)
+                TFTGameMode->BoardWidget->ClearCell(
+                    Unit->GridCol, Unit->GridRow);
+            Unit->GridCol = -1;
+            Unit->GridRow = -1;
+        }
+
+        PS->MoveToBench(Unit);
+        PlaceUnit(Unit);
+        SetHighlight(false);
+
+        if (TFTGameMode->BoardWidget)
+            TFTGameMode->BoardWidget->RefreshSynergies();
+
+        return true;
+    }
+
+    // -------------------------------------------------------
+    // Board drop
+    // -------------------------------------------------------
+    if (!BF) return false;
+    if (TFTGameMode->CombatSS->GetCurrentPhase() != EGamePhase::Prep) return false;
     if (!BF->IsPlayerCellFree(Col, Row)) return false;
-    if (TFTGameMode->CombatSS->CurrentPhase != EGamePhase::Prep) return false;
-    
 
     // Free old cell if coming from board
     if (DragOp->bFromBoard && Unit->GridCol >= 0)
     {
         BF->FreePlayerCell(Unit->GridCol, Unit->GridRow);
         PS->BoardUnits.Remove(Unit);
-
         if (TFTGameMode->BoardWidget)
-            TFTGameMode->BoardWidget->ClearCell(Unit->GridCol, Unit->GridRow);
+            TFTGameMode->BoardWidget->ClearCell(
+                Unit->GridCol, Unit->GridRow);
     }
     else
     {
@@ -111,26 +143,22 @@ bool UBoardCellWidget::NativeOnDrop(
             TFTGameMode->BoardWidget->RefreshBench();
     }
 
-    // Place unit on new cell
+    // Place on new cell
     FVector Position = BF->GetPlayerCellPosition(Col, Row);
     Unit->SetActorLocation(Position);
     BF->OccupyPlayerCell(Col, Row);
     Unit->GridCol = Col;
     Unit->GridRow = Row;
     PS->MoveToBoard(Unit);
-
-    // Show card in this cell
     PlaceUnit(Unit);
-
-    // Update synergies
-    if (TFTGameMode->ShopSS)
-    {
-        UTraitSubsystem* Traits = GetGameInstance()
-            ->GetSubsystem<UTraitSubsystem>();
-        if (Traits)
-            Traits->RecalculateTraits(PS->BoardUnits);
-    }
-
     SetHighlight(false);
+
+    // Recalculate traits
+    UTraitSubsystem* Traits = GetGameInstance()->GetSubsystem<UTraitSubsystem>();
+    if (Traits) Traits->RecalculateTraits(PS->BoardUnits);
+
+    if (TFTGameMode->BoardWidget)
+        TFTGameMode->BoardWidget->RefreshSynergies();
+
     return true;
 }

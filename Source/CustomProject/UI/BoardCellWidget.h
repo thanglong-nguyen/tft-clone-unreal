@@ -25,6 +25,10 @@ public:
     UPROPERTY(BlueprintReadWrite)
     int32 Row = 0;
 
+    
+    UPROPERTY(BlueprintReadWrite)
+    bool bIsBenchCell = false;
+
     // -------------------------------------------------------
     // Widget Bindings
     // -------------------------------------------------------
