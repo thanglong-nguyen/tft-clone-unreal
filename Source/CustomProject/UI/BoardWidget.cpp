@@ -3,12 +3,10 @@
 #include "UI/BoardCellWidget.h"
 #include "Components/UniformGridPanel.h"
 #include "TFTGameMode.h"
-#include "UnitCard.h"
 #include "Traits/TraitSubsystem.h"
 #include "Shop/ShopSubsystem.h"
 #include "Player/TFTPlayerState.h"
 #include "Components/VerticalBox.h"
-#include "Components/HorizontalBox.h"
 #include "Components/UniformGridSlot.h"
 #include "Components/Button.h"
 #include "Components/HorizontalBoxSlot.h"
@@ -60,19 +58,6 @@ void UBoardWidget::BuildBoardGrid()
                 GridSlot->SetHorizontalAlignment(HAlign_Fill);
                 GridSlot->SetVerticalAlignment(VAlign_Fill);
             }
-
-            // // If a unit already occupies this cell show it
-            // if (TFTGameMode->PS)
-            // {
-            //     for (AUnit* Unit : TFTGameMode->PS->BoardUnits)
-            //     {
-            //         if (Unit && Unit->GridCol == Col && Unit->GridRow == Row)
-            //         {
-            //             Cell->PlaceUnit(Unit);
-            //             break;
-            //         }
-            //     }
-            // }
         }
     }
 }
@@ -91,10 +76,12 @@ void UBoardWidget::BindDelegates()
             this, &UBoardWidget::HandleUnitPurchased);
     
     if (TFTGameMode->PS)
+    {
         TFTGameMode->PS->OnUnitsMerged.AddDynamic(
             this, &UBoardWidget::HandleUnitsMerged);
         TFTGameMode->PS->OnUnitPlaced.AddDynamic(
-        this, &UBoardWidget::HandleUnitPlaced);
+            this, &UBoardWidget::HandleUnitPlaced);
+    }
 }
 
 void UBoardWidget::RefreshSynergies()
@@ -129,18 +116,37 @@ void UBoardWidget::RefreshSynergies()
 
 void UBoardWidget::RefreshBench()
 {
-    if (!BenchContainer || !TFTGameMode->PS) return;
-    BenchContainer->ClearChildren();
+    if (!BenchGrid || !BoardCellClass || !TFTGameMode->PS) return;
 
-    for (AUnit* Unit : TFTGameMode->PS->BenchUnits)
+    BenchGrid->ClearChildren();
+
+    int32 MaxBench = 5;
+
+    for (int32 i = 0; i < MaxBench; i++)
     {
-        if (!Unit) continue;
+        UBoardCellWidget* Cell = CreateWidget<UBoardCellWidget>(
+            this, BoardCellClass);
+        if (!Cell) continue;
 
-        UUnitCard* Card = CreateWidget<UUnitCard>(this, UnitCardClass);
-        if (!Card) continue;
+        Cell->TFTGameMode   = TFTGameMode;
+        Cell->bIsBenchCell  = true;
+        Cell->UnitCardClass = UnitCardClass;
 
-        Card->SetUnit(Unit, false); // false = on bench
-        BenchContainer->AddChild(Card);
+        // Place unit if one exists at this bench index
+        if (TFTGameMode->PS->BenchUnits.IsValidIndex(i))
+        {
+            AUnit* Unit = TFTGameMode->PS->BenchUnits[i];
+            if (Unit) Cell->PlaceUnit(Unit);
+        }
+
+        UUniformGridSlot* Slot_ = BenchGrid->AddChildToUniformGrid(Cell, 0, i);
+        if (Slot_)
+        {
+            Slot_->SetRow(0);
+            Slot_->SetColumn(i);
+            Slot_->SetHorizontalAlignment(HAlign_Fill);
+            Slot_->SetVerticalAlignment(VAlign_Fill);
+        }
     }
 }
 

@@ -157,6 +157,9 @@ bool UShopSubsystem::BuyUnit(int32 SlotIndex)
 
     // Slot must have a unit and not already be purchased
     if (Slot.bIsPurchased || !Slot.Data) return false;
+    
+    int32 BenchIndex = TFTGameMode->GetNextFreeBenchSlot();
+    if (BenchIndex == -1) return false;
 
     if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
     {
@@ -164,16 +167,14 @@ bool UShopSubsystem::BuyUnit(int32 SlotIndex)
         {
             // Try to spend gold equal to unit cost
             if (!PS->SpendGold(Slot.Data->Cost)) return false;
-
+            
             // Spawn the unit at the bench position
             FActorSpawnParameters Params;
             Params.SpawnCollisionHandlingOverride =
                 ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-
-            FVector BenchLocation = FVector(-800.f, SlotIndex * 200.f, 0.f);
-
+            
             AUnit* PurchasedUnit = GetWorld()->SpawnActor<AUnit>(
-                AUnit::StaticClass(), BenchLocation, FRotator::ZeroRotator, Params);
+                AUnit::StaticClass(),FVector(-9999.f,-9999.f,-9999.f), FRotator::ZeroRotator, Params);
 
             if (!PurchasedUnit) return false;
 
@@ -182,6 +183,7 @@ bool UShopSubsystem::BuyUnit(int32 SlotIndex)
             PurchasedUnit->StateWidgetClass = TFTGameMode->StateWidgetClass;
             PurchasedUnit->InitFromDataAsset();
             PurchasedUnit->SetStateWidget();
+            PS->MoveToBench(PurchasedUnit);
             
             if (PurchasedUnit->StateWidget)
             {
@@ -189,8 +191,6 @@ bool UShopSubsystem::BuyUnit(int32 SlotIndex)
                 PurchasedUnit->StateWidget->HealthBar->SetFillColorAndOpacity(HealthColor);
             }
             
-            // Add to bench and mark slot as sold
-            PS->BenchUnits.Add(PurchasedUnit);
             CurrentShop[SlotIndex].bIsPurchased = true;
             
             PS->CheckForMerge(PurchasedUnit->UnitName);
@@ -233,6 +233,12 @@ void UShopSubsystem::SellUnit(AUnit* Unit)
             // Remove from wherever the unit currently is
             PS->BenchUnits.Remove(Unit);
             PS->BoardUnits.Remove(Unit);
+            
+            if (Unit->BenchSlotIndex >= 0)
+            {
+                TFTGameMode->FreeBenchSlot(Unit->BenchSlotIndex);
+                Unit->BenchSlotIndex = -1;
+            }
 
             Unit->Destroy();
 

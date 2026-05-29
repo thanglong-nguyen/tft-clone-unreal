@@ -6,7 +6,6 @@
 class UButton;
 class ATFTGameMode;
 class UVerticalBox;
-class UHorizontalBox;
 class UUniformGridPanel;
 class UBoardCellWidget;
 
@@ -29,7 +28,7 @@ public:
 	UVerticalBox* SynergyContainer;
 
 	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
-	UHorizontalBox* BenchContainer;
+	UUniformGridPanel* BenchGrid;
 	
 	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
 	UUniformGridPanel* BoardGrid;

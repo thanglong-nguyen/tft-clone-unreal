@@ -27,6 +27,7 @@ void ATFTGameMode::StartGame()
     UE_LOG(LogTemp, Log, TEXT("TFTGameMode: StartGame called"));
     
     SetupShop();
+    SetupBenchPositions();
     
     // Cache subsystem and player state references once
     // All update functions use these cached pointers
@@ -109,6 +110,35 @@ void ATFTGameMode::SetupShop()
     }
     
     Shop->FreeRefresh(1); 
+}
+
+void ATFTGameMode::SetupBenchPositions()
+{
+    BenchSlots.Init(false, 5); // 9 slots all empty
+}
+
+FVector ATFTGameMode::GetBenchPosition(int32 Index) const
+{
+    return BenchOrigin + FVector(0.f, Index * 200.f, 0.f);
+}
+
+int32 ATFTGameMode::GetNextFreeBenchSlot() const
+{
+    for (int32 i = 0; i < BenchSlots.Num(); i++)
+        if (!BenchSlots[i]) return i;
+    return -1;
+}
+
+void ATFTGameMode::OccupyBenchSlot(int32 Index)
+{
+    if (BenchSlots.IsValidIndex(Index))
+        BenchSlots[Index] = true;
+}
+
+void ATFTGameMode::FreeBenchSlot(int32 Index)
+{
+    if (BenchSlots.IsValidIndex(Index))
+        BenchSlots[Index] = false;
 }
 
 void ATFTGameMode::OnPhaseChanged(EGamePhase NewPhase)

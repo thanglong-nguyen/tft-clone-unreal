@@ -95,6 +95,12 @@ bool ATFTPlayerState::MoveToBoard(AUnit* Unit)
         UE_LOG(LogTemp, Warning, TEXT("Board full — level up to place more units"));
         return false;
     }
+    
+    if (Unit->BenchSlotIndex >= 0)
+    {
+        TFTGameMode->FreeBenchSlot(Unit->BenchSlotIndex);
+        Unit->BenchSlotIndex = -1;
+    }
 
     // Move from bench to board
     BenchUnits.Remove(Unit);
@@ -105,17 +111,33 @@ bool ATFTPlayerState::MoveToBoard(AUnit* Unit)
 void ATFTPlayerState::MoveToBench(AUnit* Unit)
 {
     if (!Unit) return;
-    
-    if (TFTGameMode->Battlefield  && Unit->GridCol >= 0)
+
+    // Free battlefield cell if coming from board
+    if (TFTGameMode->Battlefield && Unit->GridCol >= 0)
     {
         TFTGameMode->Battlefield->FreePlayerCell(Unit->GridCol, Unit->GridRow);
         Unit->GridCol = -1;
         Unit->GridRow = -1;
     }
 
+    // Free old bench slot if already on bench
+    if (Unit->BenchSlotIndex >= 0)
+    {
+        TFTGameMode->FreeBenchSlot(Unit->BenchSlotIndex);
+        Unit->BenchSlotIndex = -1;
+    }
+
+    // Find a free bench slot and place unit there
+    int32 BenchIndex = TFTGameMode->GetNextFreeBenchSlot();
+    if (BenchIndex == -1) return; // bench full
+
+    FVector BenchPos = TFTGameMode->GetBenchPosition(BenchIndex);
+    Unit->SetActorLocation(BenchPos);
+    Unit->BenchSlotIndex = BenchIndex;
+    TFTGameMode->OccupyBenchSlot(BenchIndex);
+
     BoardUnits.Remove(Unit);
 
-    // Avoid duplicates on the bench
     if (!BenchUnits.Contains(Unit))
         BenchUnits.Add(Unit);
 }
@@ -201,6 +223,18 @@ void ATFTPlayerState::MergeUnits(TArray<AUnit*>& Copies)
         AUnit* Merged = Copies[0];
         AUnit* ToRemove1 = Copies[1];
         AUnit* ToRemove2 = Copies[2];
+        
+        if (ToRemove1->BenchSlotIndex >= 0)
+        {
+            TFTGameMode->FreeBenchSlot(ToRemove1->BenchSlotIndex);
+            ToRemove1->BenchSlotIndex = -1;
+        }
+        
+        if (ToRemove2->BenchSlotIndex >= 0)
+        {
+            TFTGameMode->FreeBenchSlot(ToRemove2->BenchSlotIndex);
+            ToRemove2->BenchSlotIndex = -1;
+        }
         
         BoardUnits.Remove(ToRemove1);
         BenchUnits.Remove(ToRemove1);

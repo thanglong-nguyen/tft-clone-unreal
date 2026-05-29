@@ -33,6 +33,8 @@ public:
     
     UPROPERTY()
     UTFTHUDWidget* HUDWidget;
+
+    TArray<bool> BenchSlots;
     
     UPROPERTY(EditAnywhere, Category="UI")
     TSubclassOf<UBoardWidget> BoardWidgetClass;
@@ -51,6 +53,16 @@ public:
     // Enemy units spawned each combat round
     UPROPERTY(EditAnywhere, Category="Setup")
     TArray<UUnitDataAsset*> EnemyUnitPool;
+    
+    int32 GetNextFreeBenchSlot() const; 
+    
+    FVector GetBenchPosition(int32 Index) const;
+    
+    void OccupyBenchSlot(int32 Index);
+    
+    void FreeBenchSlot(int32 Index);
+    
+    FVector BenchOrigin = FVector(-1000.f, -800.f, 0.f);
 
 private:
 
@@ -58,6 +70,9 @@ private:
     void StartGame();
 
     void SetupShop();
+    
+    // Generates bench slot positions relative to battlefield
+    void SetupBenchPositions();
 
     UFUNCTION()
     void OnPhaseChanged(EGamePhase NewPhase);

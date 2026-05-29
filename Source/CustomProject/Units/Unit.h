@@ -113,6 +113,9 @@ public:
 
     UPROPERTY()
     int32 GridRow = -1;
+    
+    UPROPERTY()
+    int32 BenchSlotIndex = -1;
 
     // -------------------------------------------------------
     // Combat Interface

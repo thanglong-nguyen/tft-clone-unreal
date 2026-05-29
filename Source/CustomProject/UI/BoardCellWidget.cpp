@@ -57,7 +57,8 @@ bool UBoardCellWidget::NativeOnDragOver(
 
     // Red highlight during combat — can't place
     if (TFTGameMode && 
-        TFTGameMode->CombatSS->GetCurrentPhase() != EGamePhase::Prep)
+        TFTGameMode->CombatSS->GetCurrentPhase() != EGamePhase::Prep &&
+        bIsBenchCell == false)
     {
         if (CellBackground)
             CellBackground->SetColorAndOpacity(
@@ -89,31 +90,37 @@ bool UBoardCellWidget::NativeOnDrop(
     ABattlefieldActor* BF = TFTGameMode->Battlefield;
 
     if (!PS) return false;
+    if (!BF) return false;
+    if (TFTGameMode->CombatSS->GetCurrentPhase() != EGamePhase::Prep) return false;
+    
 
     // -------------------------------------------------------
     // Bench drop
     // -------------------------------------------------------
     if (bIsBenchCell)
     {
-        if (OccupyingUnit) return false; // slot taken
-
+        
         // Free board cell if coming from board
         if (DragOp->bFromBoard && Unit->GridCol >= 0 && BF)
         {
+            // bench full
+            int32 BenchIndex = TFTGameMode->GetNextFreeBenchSlot();
+            if (BenchIndex == -1) return false;
+            SetHighlight(false);
+            
             BF->FreePlayerCell(Unit->GridCol, Unit->GridRow);
             if (TFTGameMode->BoardWidget)
                 TFTGameMode->BoardWidget->ClearCell(
                     Unit->GridCol, Unit->GridRow);
-            Unit->GridCol = -1;
-            Unit->GridRow = -1;
         }
-
+        
         PS->MoveToBench(Unit);
         PlaceUnit(Unit);
         SetHighlight(false);
 
         if (TFTGameMode->BoardWidget)
             TFTGameMode->BoardWidget->RefreshSynergies();
+            TFTGameMode->BoardWidget->RefreshBench();
 
         return true;
     }
@@ -121,8 +128,7 @@ bool UBoardCellWidget::NativeOnDrop(
     // -------------------------------------------------------
     // Board drop
     // -------------------------------------------------------
-    if (!BF) return false;
-    if (TFTGameMode->CombatSS->GetCurrentPhase() != EGamePhase::Prep) return false;
+    
     if (!BF->IsPlayerCellFree(Col, Row)) return false;
 
     // Free old cell if coming from board
@@ -139,6 +145,7 @@ bool UBoardCellWidget::NativeOnDrop(
         // Coming from bench
         if (!PS->CanPlaceOnBoard()) return false;
         PS->BenchUnits.Remove(Unit);
+        
         if (TFTGameMode->BoardWidget)
             TFTGameMode->BoardWidget->RefreshBench();
     }
