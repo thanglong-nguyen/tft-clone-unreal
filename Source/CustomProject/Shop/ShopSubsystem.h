@@ -26,7 +26,7 @@ struct FShopSlot
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShopRefresh);
 
 // Fired when a unit is purchased — passes the spawned unit
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUnitPurchased, AUnit*, NewUnit);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUnitTransaction, AUnit*, Unit);
 
 UCLASS()
 class CUSTOMPROJECT_API UShopSubsystem : public UGameInstanceSubsystem
@@ -73,7 +73,7 @@ public:
 
     // Broadcast when a unit is purchased
     UPROPERTY(BlueprintAssignable)
-    FOnUnitPurchased OnUnitPurchased;
+    FOnUnitTransaction OnUnitTransaction;
 
 private:
     // Tracks how many copies of each unit are left in the shared pool

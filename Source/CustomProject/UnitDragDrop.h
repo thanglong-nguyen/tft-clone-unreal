@@ -3,6 +3,8 @@
 #include "Blueprint/DragDropOperation.h"
 #include "UnitDragDrop.generated.h"
 
+class AUnit;
+
 UCLASS()
 class CUSTOMPROJECT_API UUnitDragDrop : public UDragDropOperation
 {

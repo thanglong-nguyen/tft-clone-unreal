@@ -195,7 +195,7 @@ bool UShopSubsystem::BuyUnit(int32 SlotIndex)
             
             PS->CheckForMerge(PurchasedUnit->UnitName);
             OnShopRefresh.Broadcast(); 
-            OnUnitPurchased.Broadcast(PurchasedUnit);
+            OnUnitTransaction.Broadcast(PurchasedUnit);
 
             UE_LOG(LogTemp, Log, TEXT("Bought %s for %d gold | Gold remaining: %d"),
                 *Slot.Data->UnitName.ToString(), Slot.Data->Cost, PS->Gold);
@@ -240,8 +240,10 @@ void UShopSubsystem::SellUnit(AUnit* Unit)
                 Unit->BenchSlotIndex = -1;
             }
 
+            OnUnitTransaction.Broadcast(Unit);
+            
             Unit->Destroy();
-
+            
             UE_LOG(LogTemp, Log, TEXT("Sold %s (Star %d) for %d gold | Returned %d copies to pool"),
                 *Unit->UnitName.ToString(), Unit->StarLevel, Refund, Copies);
         }

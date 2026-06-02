@@ -9,6 +9,7 @@
 #include "Components/VerticalBox.h"
 #include "Components/UniformGridSlot.h"
 #include "Components/Button.h"
+#include "UI/SellZoneWidget.h"
 #include "Components/HorizontalBoxSlot.h"
 
 void UBoardWidget::NativeConstruct()
@@ -22,6 +23,11 @@ void UBoardWidget::NativeConstruct()
     if (ToggleHUDButton)
         ToggleHUDButton->OnClicked.AddDynamic(
             this, &UBoardWidget::OnToggleHUDClicked);
+    
+    if (SellZone)
+    {
+        SellZone->TFTGameMode = TFTGameMode;
+    }
 }
 
 void UBoardWidget::BuildBoardGrid()
@@ -72,8 +78,8 @@ void UBoardWidget::BindDelegates()
 
     // Refresh bench when a unit is bought
     if (TFTGameMode->ShopSS)
-        TFTGameMode->ShopSS->OnUnitPurchased.AddDynamic(
-            this, &UBoardWidget::HandleUnitPurchased);
+        TFTGameMode->ShopSS->OnUnitTransaction.AddDynamic(
+            this, &UBoardWidget::HandleUnitTransaction);
     
     if (TFTGameMode->PS)
     {
@@ -216,8 +222,9 @@ void UBoardWidget::HandleTraitsUpdated()
     RefreshSynergies();
 }
 
-void UBoardWidget::HandleUnitPurchased(AUnit* NewUnit)
+void UBoardWidget::HandleUnitTransaction(AUnit* NewUnit)
 {
     RefreshBench();
     RefreshSynergies();
+    RebuildOccupiedCells();
 }

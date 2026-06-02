@@ -3,6 +3,8 @@
 #include "Blueprint/UserWidget.h"
 #include "BoardWidget.generated.h"
 
+class AUnit;
+class USellZoneWidget;
 class UButton;
 class ATFTGameMode;
 class UVerticalBox;
@@ -32,6 +34,9 @@ public:
 	
 	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
 	UUniformGridPanel* BoardGrid;
+	
+	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	USellZoneWidget* SellZone;
 	
 	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
 	UButton* ToggleHUDButton;
@@ -88,5 +93,5 @@ private:
 	void HandleTraitsUpdated();
 
 	UFUNCTION()
-	void HandleUnitPurchased(AUnit* NewUnit);
+	void HandleUnitTransaction(AUnit* NewUnit);
 };

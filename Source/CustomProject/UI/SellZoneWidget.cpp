@@ -36,6 +36,8 @@ bool USellZoneWidget::NativeOnDrop(
 {
 	UUnitDragDrop* DragOp = Cast<UUnitDragDrop>(InOperation);
 	if (!DragOp || !DragOp->DraggedUnit || !TFTGameMode) return false;
+	
+	if (TFTGameMode->CombatSS->GetCurrentPhase() != EGamePhase::Prep) return false;
 
 	UShopSubsystem* Shop = TFTGameMode->ShopSS;
 	if (!Shop) return false;
