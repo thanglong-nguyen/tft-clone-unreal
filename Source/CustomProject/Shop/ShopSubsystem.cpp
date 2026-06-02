@@ -4,6 +4,7 @@
 #include "Player/TFTPlayerState.h"
 #include "TFTGameMode.h"
 #include "Engine/World.h"
+#include "UI/BoardWidget.h"
 
 void UShopSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -229,17 +230,29 @@ void UShopSubsystem::SellUnit(AUnit* Unit)
             {
                 ReturnToPool(Unit->UnitName);
             }
-
-            // Remove from wherever the unit currently is
-            PS->BenchUnits.Remove(Unit);
-            PS->BoardUnits.Remove(Unit);
             
+            // Clear bench slot if unit was on bench
             if (Unit->BenchSlotIndex >= 0)
             {
                 TFTGameMode->FreeBenchSlot(Unit->BenchSlotIndex);
                 Unit->BenchSlotIndex = -1;
             }
+            
+            // Clear board cell if unit was on board
+            if (Unit->GridCol >= 0)
+            {
+                TFTGameMode->BoardWidget->ClearCell(Unit->GridCol, Unit->GridRow);
+                
+                TFTGameMode->Battlefield->FreePlayerCell(
+                Unit->GridCol, Unit->GridRow);
+                Unit->GridCol = -1;
+                Unit->GridRow = -1;
+            }
 
+            // Remove from wherever the unit currently is
+            PS->BenchUnits.Remove(Unit);
+            PS->BoardUnits.Remove(Unit);
+            
             OnUnitTransaction.Broadcast(Unit);
             
             Unit->Destroy();
