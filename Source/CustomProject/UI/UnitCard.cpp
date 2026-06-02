@@ -21,8 +21,15 @@ void UUnitCard::SetUnit(AUnit* InUnit, bool bIsOnBoard)
             FString::Printf(TEXT("★%d"), Unit->StarLevel)));
 
     if (CostText && Unit->DataAsset)
+    {
+        // Cost scales with star level — same formula as sell refund
+        int32 Copies = FMath::RoundToInt(FMath::Pow(3.f, Unit->StarLevel - 1));
+        
+        int32 TotalCost = Unit->DataAsset->Cost * Copies;
+        
         CostText->SetText(FText::FromString(
-            FString::Printf(TEXT("%dg"), Unit->DataAsset->Cost)));
+            FString::Printf(TEXT("%dg"), TotalCost)));
+    }
 
     // Tint card background by star level
     if (CardBackground)
