@@ -6,6 +6,7 @@
 #include "Units/UnitDataAsset.h"
 #include "Blueprint/UserWidget.h"
 #include "Combat/BattlefieldActor.h"
+#include "Traits/TraitSubsystem.h"
 #include "UI/BoardWidget.h"
 
 void ATFTGameMode::BeginPlay()
@@ -34,6 +35,7 @@ void ATFTGameMode::StartGame()
     UGameInstance* GI = GetGameInstance();
     CombatSS = GI->GetSubsystem<UCombatSubsystem>();
     ShopSS   = GI->GetSubsystem<UShopSubsystem>();
+    TraitSS = GetGameInstance()->GetSubsystem<UTraitSubsystem>();
     
     FActorSpawnParameters Params;
     Battlefield = GetWorld()->SpawnActor<ABattlefieldActor>(
@@ -46,6 +48,11 @@ void ATFTGameMode::StartGame()
     {
         PS->TFTGameMode = this;
         PS->AddGold(10);
+    }
+    
+    if (TraitSS)
+    {
+        TraitSS->TFTGameMode = this;
     }
     
     

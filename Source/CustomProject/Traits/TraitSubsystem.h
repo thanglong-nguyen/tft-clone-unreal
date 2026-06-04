@@ -4,6 +4,7 @@
 #include "GameplayTagContainer.h"
 #include "TraitSubsystem.generated.h"
 
+class ATFTGameMode;
 class AUnit;
 
 // Snapshot of one trait's current state
@@ -42,6 +43,10 @@ class CUSTOMPROJECT_API UTraitSubsystem : public UGameInstanceSubsystem
     GENERATED_BODY()
 
 public:
+    
+    UPROPERTY()
+    ATFTGameMode* TFTGameMode;
+    
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
     // -------------------------------------------------------

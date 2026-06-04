@@ -1,6 +1,7 @@
 #include "Player/TFTPlayerState.h"
 
 #include "TFTGameMode.h"
+#include "Traits/TraitSubsystem.h"
 #include "Units/Unit.h"
 
 ATFTPlayerState::ATFTPlayerState()
@@ -281,6 +282,12 @@ void ATFTPlayerState::TryAutoPlace(AUnit* Unit)
         Unit->GridRow = Row;
 
         MoveToBoard(Unit);
+        
+        if (TFTGameMode->TraitSS)
+        {
+            TFTGameMode->TraitSS->RecalculateTraits(this->BoardUnits);
+        }
+        
         OnUnitPlaced.Broadcast(Unit);
 
         UE_LOG(LogTemp, Log, TEXT("Auto-placed %s at cell [%d,%d]"),

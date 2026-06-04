@@ -4,6 +4,7 @@
 #include "Engine/World.h"
 #include "Player/TFTPlayerState.h"
 #include "TFTGameMode.h"
+#include "Traits/TraitSubsystem.h"
 
 void UCombatSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -75,6 +76,8 @@ void UCombatSubsystem::StartPrepPhase()
             Unit->SetActorLocation(Position);
         }
     }
+    
+    TFTGameMode->TraitSS->RecalculateTraits(TFTGameMode->PS->BoardUnits);
 
     // Count down every second — when it hits 0 start combat
     GetWorld()->GetTimerManager().SetTimer(PrepCountdown, [this]()

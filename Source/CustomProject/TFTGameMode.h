@@ -6,6 +6,7 @@
 #include "Combat/BattlefieldActor.h"
 #include "TFTGameMode.generated.h"
 
+class UTraitSubsystem;
 class UBoardWidget;
 
 UCLASS()
@@ -21,6 +22,8 @@ public:
 
     UPROPERTY()
     UShopSubsystem* ShopSS;
+    
+    UTraitSubsystem* TraitSS; 
 
     UPROPERTY()
     ATFTPlayerState* PS;

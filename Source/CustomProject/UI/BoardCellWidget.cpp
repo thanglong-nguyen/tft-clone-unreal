@@ -117,9 +117,14 @@ bool UBoardCellWidget::NativeOnDrop(
         PS->MoveToBench(Unit);
         PlaceUnit(Unit);
         SetHighlight(false);
+        
+
+        if (TFTGameMode->TraitSS)
+        {
+            TFTGameMode->TraitSS->RecalculateTraits(PS->BoardUnits);
+        }
 
         if (TFTGameMode->BoardWidget)
-            TFTGameMode->BoardWidget->RefreshSynergies();
             TFTGameMode->BoardWidget->RefreshBench();
 
         return true;
@@ -161,11 +166,10 @@ bool UBoardCellWidget::NativeOnDrop(
     SetHighlight(false);
 
     // Recalculate traits
-    UTraitSubsystem* Traits = GetGameInstance()->GetSubsystem<UTraitSubsystem>();
-    if (Traits) Traits->RecalculateTraits(PS->BoardUnits);
-
-    if (TFTGameMode->BoardWidget)
-        TFTGameMode->BoardWidget->RefreshSynergies();
+    if (TFTGameMode->TraitSS)
+    {
+        TFTGameMode->TraitSS->RecalculateTraits(PS->BoardUnits);
+    }
 
     return true;
 }
