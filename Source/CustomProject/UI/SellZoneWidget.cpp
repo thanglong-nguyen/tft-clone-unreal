@@ -39,6 +39,8 @@ bool USellZoneWidget::NativeOnDrop(
 	
 	if (TFTGameMode->CombatSS->GetCurrentPhase() != EGamePhase::Prep && DragOp->DraggedUnit->GridCol >=0)
 	{
+		TFTGameMode->ShowMessage(TEXT("Can't sell combating units"), 
+	2.f, FLinearColor::Yellow);
 		return false;
 	}
 	

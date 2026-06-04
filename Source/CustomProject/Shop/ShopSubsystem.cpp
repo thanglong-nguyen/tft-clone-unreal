@@ -28,8 +28,6 @@ void UShopSubsystem::InitPool()
         if (!UnitData) continue;
         UnitPool.Add(UnitData->UnitName, CopiesPerUnit);
     }
-
-    UE_LOG(LogTemp, Log, TEXT("Pool initialised with %d unit types"), UnitPool.Num());
 }
 
 void UShopSubsystem::ReturnToPool(FName UnitName)
@@ -160,7 +158,16 @@ bool UShopSubsystem::BuyUnit(int32 SlotIndex)
     if (Slot.bIsPurchased || !Slot.Data) return false;
     
     int32 BenchIndex = TFTGameMode->GetNextFreeBenchSlot();
-    if (BenchIndex == -1) return false;
+    if (BenchIndex == -1)
+    {
+        
+        // Bench full
+        TFTGameMode->ShowMessage(TEXT("Bench is full"), 
+            2.f, FLinearColor::Yellow);
+        
+        return false;
+    }
+    
 
     if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
     {
@@ -197,9 +204,6 @@ bool UShopSubsystem::BuyUnit(int32 SlotIndex)
             PS->CheckForMerge(PurchasedUnit->UnitName);
             OnShopRefresh.Broadcast(); 
             OnUnitTransaction.Broadcast(PurchasedUnit);
-
-            UE_LOG(LogTemp, Log, TEXT("Bought %s for %d gold | Gold remaining: %d"),
-                *Slot.Data->UnitName.ToString(), Slot.Data->Cost, PS->Gold);
 
             return true;
         }
@@ -257,8 +261,12 @@ void UShopSubsystem::SellUnit(AUnit* Unit)
             
             Unit->Destroy();
             
-            UE_LOG(LogTemp, Log, TEXT("Sold %s (Star %d) for %d gold | Returned %d copies to pool"),
-                *Unit->UnitName.ToString(), Unit->StarLevel, Refund, Copies);
+            
+            TFTGameMode->ShowMessage(
+                FString::Printf(TEXT("Sold %s ★%d for %dg"), 
+                    *Unit->UnitName.ToString(), Unit->StarLevel, Refund),
+                2.f,
+                FLinearColor::Yellow);
         }
     }
 }

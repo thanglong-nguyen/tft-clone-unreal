@@ -91,7 +91,12 @@ bool UBoardCellWidget::NativeOnDrop(
 
     if (!PS) return false;
     if (!BF) return false;
-    if (TFTGameMode->CombatSS->GetCurrentPhase() != EGamePhase::Prep) return false;
+    if (TFTGameMode->CombatSS->GetCurrentPhase() != EGamePhase::Prep)
+    {
+        TFTGameMode->ShowMessage(TEXT("Can't move units during Combat"), 
+    2.f, FLinearColor::Yellow);
+        return false;
+    }
     
 
     // -------------------------------------------------------
