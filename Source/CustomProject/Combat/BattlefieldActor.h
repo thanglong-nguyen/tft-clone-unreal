@@ -67,4 +67,6 @@ private:
     TArray<TArray<bool>> EnemyGrid;
 
     void InitGrids();
+    
+    void DrawBorder();
 };

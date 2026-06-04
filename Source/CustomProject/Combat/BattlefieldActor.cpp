@@ -9,6 +9,7 @@ void ABattlefieldActor::BeginPlay()
 {
     Super::BeginPlay();
     InitGrids();
+    DrawBorder();
 }
 
 void ABattlefieldActor::InitGrids()
@@ -21,6 +22,42 @@ void ABattlefieldActor::InitGrids()
     {
         PlayerGrid[Col].Init(false, Rows);
         EnemyGrid[Col].Init(false, Rows);
+    }
+}
+
+
+void ABattlefieldActor::DrawBorder()
+{
+    // Player side grid lines
+    for (int32 Row = 0; Row <= Rows/2; Row++)
+    {
+        // Horizontal lines — run along Y axis (separating rows)
+        FVector Start = GetPlayerCellPosition(0, Row) + FVector(CellSize * 0.5f, -CellSize * 0.5f, 1.f);
+        FVector End   = GetPlayerCellPosition(Columns - 1, Row) + FVector(CellSize * 0.5f, CellSize * 0.5f, 1.f);
+        DrawDebugLine(GetWorld(), Start, End, FColor::Green, true, -1.f, 0, 2.f);
+    }
+
+    for (int32 Col = 0; Col <= Columns; Col++)
+    {
+        // Vertical lines — run along X axis (separating columns)
+        FVector Start = GetPlayerCellPosition(Col, 0) + FVector(CellSize * 0.5f, -CellSize * 0.5f, 1.f);
+        FVector End   = GetPlayerCellPosition(Col, Rows/2 - 1) + FVector(-CellSize * 0.5f, -CellSize * 0.5f, 1.f);
+        DrawDebugLine(GetWorld(), Start, End, FColor::Green, true, -1.f, 0, 2.f);
+    }
+    
+    // Enemy side grid lines — red tint
+    for (int32 Row = 0; Row <= Rows/2; Row++)
+    {
+        FVector Start = GetEnemyCellPosition(0, Row) + FVector(-CellSize * 0.5f, -CellSize * 0.5f, 1.f);
+        FVector End   = GetEnemyCellPosition(Columns - 1, Row) + FVector(-CellSize * 0.5f, CellSize * 0.5f, 1.f);
+        DrawDebugLine(GetWorld(), Start, End, FColor::Red, true, -1.f, 0, 2.f);
+    }
+
+    for (int32 Col = 0; Col <= Columns; Col++)
+    {
+        FVector Start = GetEnemyCellPosition(Col, 0) + FVector(-CellSize * 0.5f, -CellSize * 0.5f, 1.f);
+        FVector End   = GetEnemyCellPosition(Col, Rows/2 - 1) + FVector(CellSize * 0.5f, -CellSize * 0.5f, 1.f);
+        DrawDebugLine(GetWorld(), Start, End, FColor::Red, true, -1.f, 0, 2.f);
     }
 }
 
