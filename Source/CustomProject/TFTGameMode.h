@@ -66,6 +66,10 @@ public:
     
     void FreeBenchSlot(int32 Index);
     
+    UFUNCTION(BlueprintCallable)
+    void ShowMessage(const FString& Message, float Duration = 2.f, 
+        FLinearColor Color = FLinearColor::White);
+    
     FVector BenchOrigin = FVector(-1200.f, -500.f, 0.f);
 private:
 

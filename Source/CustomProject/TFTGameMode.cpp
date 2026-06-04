@@ -25,7 +25,6 @@ void ATFTGameMode::BeginPlay()
 
 void ATFTGameMode::StartGame()
 {
-    UE_LOG(LogTemp, Log, TEXT("TFTGameMode: StartGame called"));
     
     SetupShop();
     SetupBenchPositions();
@@ -92,17 +91,8 @@ void ATFTGameMode::StartGame()
                 HUDWidget->TFTGameMode = this;
                 HUDWidget->AddToPlayerScreen();
                 HUDWidget->SetVisibility(ESlateVisibility::Visible);
-                UE_LOG(LogTemp, Log, TEXT("HUD added to viewport"));
-            }
-            else
-            {
-                UE_LOG(LogTemp, Error, TEXT("HUD widget failed to create"));
             }
         }
-    }
-    else
-    {
-        UE_LOG(LogTemp, Error, TEXT("HUDWidgetClass is null"));
     }
 }
 
@@ -169,6 +159,19 @@ void ATFTGameMode::FreeBenchSlot(int32 Index)
 {
     if (BenchSlots.IsValidIndex(Index))
         BenchSlots[Index] = false;
+}
+
+void ATFTGameMode::ShowMessage(const FString& Message, float Duration, FLinearColor Color)
+{
+    if (GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(
+            -1,        // key — -1 means new message each time
+            Duration,  // how long it stays
+            Color.ToFColor(true),
+            Message
+        );
+    }
 }
 
 void ATFTGameMode::OnPhaseChanged(EGamePhase NewPhase)

@@ -18,11 +18,6 @@ void UTraitSubsystem::Initialize(FSubsystemCollectionBase& Collection)
         nullptr,
         TEXT("/Game/DA_Traits.DA_Traits")
     ));
-
-    if (TraitData)
-        UE_LOG(LogTemp, Log, TEXT("TraitSubsystem: DA_Traits loaded"))
-    else
-        UE_LOG(LogTemp, Error, TEXT("TraitSubsystem: DA_Traits not found — check path"))
 }
 
 // -------------------------------------------------------

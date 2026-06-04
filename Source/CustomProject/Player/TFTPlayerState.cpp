@@ -93,7 +93,8 @@ bool ATFTPlayerState::MoveToBoard(AUnit* Unit)
     // Board is full — player needs to level up first
     if (!CanPlaceOnBoard())
     {
-        UE_LOG(LogTemp, Warning, TEXT("Board full — level up to place more units"));
+        TFTGameMode->ShowMessage(TEXT("Board full — level up to place more units"), 
+    2.f, FLinearColor::Red);
         return false;
     }
     
@@ -155,7 +156,12 @@ void ATFTPlayerState::AddGold(int32 Amount)
 bool ATFTPlayerState::SpendGold(int32 Amount)
 {
     // Can't spend what you don't have
-    if (Gold < Amount) return false;
+    if (Gold < Amount)
+    {
+        TFTGameMode->ShowMessage(TEXT("Not enough gold"), 
+    2.f, FLinearColor::Yellow);
+        return false;
+    }
 
     Gold -= Amount;
     return true;
