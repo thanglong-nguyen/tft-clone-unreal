@@ -121,7 +121,30 @@ void ATFTGameMode::SetupShop()
 
 void ATFTGameMode::SetupBenchPositions()
 {
-    BenchSlots.Init(false, 5); // 9 slots all empty
+    int Slots = 5;
+    BenchSlots.Init(false, Slots);
+    float Spacing = 200.f;
+
+    // Draw bench grid lines
+    UWorld* World = GetWorld();
+    float HalfCell = Spacing * 0.5f;
+
+    for (int32 i = 0; i <= Slots; i++)
+    {
+        // Vertical lines — separating each bench slot
+        FVector Start = BenchOrigin + FVector(-HalfCell, i * Spacing - HalfCell, 1.f);
+        FVector End   = BenchOrigin + FVector(HalfCell,  i * Spacing - HalfCell, 1.f);
+        DrawDebugLine(World, Start, End, FColor::Yellow, true, -1.f, 0, 2.f);
+    }
+
+    // Top and bottom horizontal lines
+    FVector TopLeft     = BenchOrigin + FVector(HalfCell,  -HalfCell,            1.f);
+    FVector TopRight    = BenchOrigin + FVector(HalfCell,   Slots * Spacing - HalfCell, 1.f);
+    FVector BottomLeft  = BenchOrigin + FVector(-HalfCell, -HalfCell,            1.f);
+    FVector BottomRight = BenchOrigin + FVector(-HalfCell,  Slots * Spacing - HalfCell, 1.f);
+
+    DrawDebugLine(World, TopLeft,    TopRight,    FColor::Yellow, true, -1.f, 0, 2.f);
+    DrawDebugLine(World, BottomLeft, BottomRight, FColor::Yellow, true, -1.f, 0, 2.f);
 }
 
 FVector ATFTGameMode::GetBenchPosition(int32 Index) const

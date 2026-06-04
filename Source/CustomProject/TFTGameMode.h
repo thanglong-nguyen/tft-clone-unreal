@@ -23,6 +23,7 @@ public:
     UPROPERTY()
     UShopSubsystem* ShopSS;
     
+    UPROPERTY()
     UTraitSubsystem* TraitSS; 
 
     UPROPERTY()
@@ -65,8 +66,7 @@ public:
     
     void FreeBenchSlot(int32 Index);
     
-    FVector BenchOrigin = FVector(-1000.f, -800.f, 0.f);
-
+    FVector BenchOrigin = FVector(-1200.f, -500.f, 0.f);
 private:
 
     UFUNCTION()
