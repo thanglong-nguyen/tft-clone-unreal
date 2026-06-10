@@ -168,105 +168,102 @@ bool UShopSubsystem::BuyUnit(int32 SlotIndex)
         return false;
     }
     
-
-    if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+    if (TFTGameMode->PS)
     {
-        if (ATFTPlayerState* PS = PC->GetPlayerState<ATFTPlayerState>())
+        ATFTPlayerState* PS = TFTGameMode->PS;
+        
+        // Try to spend gold equal to unit cost
+        if (!PS->SpendGold(Slot.Data->Cost)) return false;
+        
+        // Spawn the unit at the bench position
+        FActorSpawnParameters Params;
+        Params.SpawnCollisionHandlingOverride =
+            ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+        
+        AUnit* PurchasedUnit = GetWorld()->SpawnActor<AUnit>(
+            AUnit::StaticClass(),FVector(-9999.f,-9999.f,-9999.f), FRotator::ZeroRotator, Params);
+
+        if (!PurchasedUnit) return false;
+
+        // Load stats and mesh from the data asset
+        PurchasedUnit->DataAsset = Slot.Data;
+        PurchasedUnit->StateWidgetClass = TFTGameMode->StateWidgetClass;
+        PurchasedUnit->InitFromDataAsset();
+        PurchasedUnit->SetStateWidget();
+        PS->MoveToBench(PurchasedUnit);
+        
+        if (PurchasedUnit->StateWidget)
         {
-            // Try to spend gold equal to unit cost
-            if (!PS->SpendGold(Slot.Data->Cost)) return false;
-            
-            // Spawn the unit at the bench position
-            FActorSpawnParameters Params;
-            Params.SpawnCollisionHandlingOverride =
-                ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-            
-            AUnit* PurchasedUnit = GetWorld()->SpawnActor<AUnit>(
-                AUnit::StaticClass(),FVector(-9999.f,-9999.f,-9999.f), FRotator::ZeroRotator, Params);
-
-            if (!PurchasedUnit) return false;
-
-            // Load stats and mesh from the data asset
-            PurchasedUnit->DataAsset = Slot.Data;
-            PurchasedUnit->StateWidgetClass = TFTGameMode->StateWidgetClass;
-            PurchasedUnit->InitFromDataAsset();
-            PurchasedUnit->SetStateWidget();
-            PS->MoveToBench(PurchasedUnit);
-            
-            if (PurchasedUnit->StateWidget)
-            {
-                FLinearColor HealthColor = FLinearColor::Green;
-                PurchasedUnit->StateWidget->HealthBar->SetFillColorAndOpacity(HealthColor);
-            }
-            
-            CurrentShop[SlotIndex].bIsPurchased = true;
-            
-            PS->CheckForMerge(PurchasedUnit->UnitName);
-            OnShopRefresh.Broadcast(); 
-            OnUnitTransaction.Broadcast(PurchasedUnit);
-
-            return true;
+            FLinearColor HealthColor = FLinearColor::Green;
+            PurchasedUnit->StateWidget->HealthBar->SetFillColorAndOpacity(HealthColor);
         }
+        
+        CurrentShop[SlotIndex].bIsPurchased = true;
+        
+        PS->CheckForMerge(PurchasedUnit->UnitName);
+        OnShopRefresh.Broadcast(); 
+        OnUnitTransaction.Broadcast(PurchasedUnit);
+
+        return true;
     }
+    
     return false;
 }
 
 void UShopSubsystem::SellUnit(AUnit* Unit)
 {
     if (!Unit) return;
-
-    if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+    
+    if (TFTGameMode->PS)
     {
-        if (ATFTPlayerState* PS = PC->GetPlayerState<ATFTPlayerState>())
-        {
+        ATFTPlayerState* PS = TFTGameMode->PS;
         
-            // How many original copies went into this unit
-            // 1 star = 1, 2 star = 3, 3 star = 9
-            int32 Copies = FMath::Pow(3.f, Unit->StarLevel - 1);
-           
-            // Refund full cost — fallback to 1 if no data asset
-            int32 Refund = Unit->DataAsset ? Unit->DataAsset->Cost* Copies  : 1;
-            
-            PS->AddGold(Refund);
-            
-            // Return all copies back to the pool
-            for (int32 i = 0; i < Copies; i++)
-            {
-                ReturnToPool(Unit->UnitName);
-            }
-            
-            // Clear bench slot if unit was on bench
-            if (Unit->BenchSlotIndex >= 0)
-            {
-                TFTGameMode->FreeBenchSlot(Unit->BenchSlotIndex);
-                Unit->BenchSlotIndex = -1;
-            }
-            
-            // Clear board cell if unit was on board
-            if (Unit->GridCol >= 0)
-            {
-                TFTGameMode->BoardWidget->ClearCell(Unit->GridCol, Unit->GridRow);
-                
-                TFTGameMode->Battlefield->FreePlayerCell(
-                Unit->GridCol, Unit->GridRow);
-                Unit->GridCol = -1;
-                Unit->GridRow = -1;
-            }
-
-            // Remove from wherever the unit currently is
-            PS->BenchUnits.Remove(Unit);
-            PS->BoardUnits.Remove(Unit);
-            
-            OnUnitTransaction.Broadcast(Unit);
-            
-            Unit->Destroy();
-            
-            
-            TFTGameMode->ShowMessage(
-                FString::Printf(TEXT("Sold %s ★%d for %dg"), 
-                    *Unit->UnitName.ToString(), Unit->StarLevel, Refund),
-                2.f,
-                FLinearColor::Yellow);
+        // How many original copies went into this unit
+        // 1 star = 1, 2 star = 3, 3 star = 9
+        int32 Copies = FMath::Pow(3.f, Unit->StarLevel - 1);
+       
+        // Refund full cost — fallback to 1 if no data asset
+        int32 Refund = Unit->DataAsset ? Unit->DataAsset->Cost* Copies  : 1;
+        
+        PS->AddGold(Refund);
+        
+        // Return all copies back to the pool
+        for (int32 i = 0; i < Copies; i++)
+        {
+            ReturnToPool(Unit->UnitName);
         }
+        
+        // Clear bench slot if unit was on bench
+        if (Unit->BenchSlotIndex >= 0)
+        {
+            TFTGameMode->FreeBenchSlot(Unit->BenchSlotIndex);
+            Unit->BenchSlotIndex = -1;
+        }
+        
+        // Clear board cell if unit was on board
+        if (Unit->GridCol >= 0)
+        {
+            TFTGameMode->BoardWidget->ClearCell(Unit->GridCol, Unit->GridRow);
+            
+            TFTGameMode->Battlefield->FreePlayerCell(
+            Unit->GridCol, Unit->GridRow);
+            Unit->GridCol = -1;
+            Unit->GridRow = -1;
+        }
+
+        // Remove from wherever the unit currently is
+        PS->BenchUnits.Remove(Unit);
+        PS->BoardUnits.Remove(Unit);
+        
+        OnUnitTransaction.Broadcast(Unit);
+        
+        Unit->Destroy();
+        
+        
+        TFTGameMode->ShowMessage(
+            FString::Printf(TEXT("Sold %s ★%d for %dg"), 
+                *Unit->UnitName.ToString(), Unit->StarLevel, Refund),
+            2.f,
+            FLinearColor::Yellow);
     }
 }

@@ -55,8 +55,7 @@ void UTraitSubsystem::CountTraits(const TArray<AUnit*>& BoardUnits)
 
     for (AUnit* Unit : BoardUnits)
     {
-        // Skip invalid, dead, or already counted units
-        if (!Unit || Unit->IsDead()) continue;
+        // Skip invalid or already counted units
         if (CountedNames.Contains(Unit->UnitName)) continue;
         if (!Unit->DataAsset) continue;
         

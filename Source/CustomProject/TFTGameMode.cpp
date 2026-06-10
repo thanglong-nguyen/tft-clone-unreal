@@ -12,15 +12,7 @@
 void ATFTGameMode::BeginPlay()
 {
     Super::BeginPlay();
-
-    FTimerHandle StartHandle;
-    GetWorld()->GetTimerManager().SetTimer(
-        StartHandle,
-        this,
-        &ATFTGameMode::StartGame,
-        0.5f,
-        false
-    );
+    StartGame();
 }
 
 void ATFTGameMode::StartGame()
