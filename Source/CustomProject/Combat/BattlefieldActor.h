@@ -3,6 +3,9 @@
 #include "GameFramework/Actor.h"
 #include "BattlefieldActor.generated.h"
 
+// Defines the physical layout of the battlefield.
+// Manages two 4x4 grids — player side (negative X) and enemy side (positive X).
+// Provides world positions for each cell and tracks occupation state.
 UCLASS()
 class CUSTOMPROJECT_API ABattlefieldActor : public AActor
 {

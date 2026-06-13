@@ -15,19 +15,17 @@
 void UBoardWidget::NativeConstruct()
 {
     Super::NativeConstruct();
+
     BindDelegates();
     BuildBoardGrid();
     RefreshBench();
     RefreshSynergies();
-    
+
     if (ToggleHUDButton)
-        ToggleHUDButton->OnClicked.AddDynamic(
-            this, &UBoardWidget::OnToggleHUDClicked);
+        ToggleHUDButton->OnClicked.AddDynamic(this, &UBoardWidget::OnToggleHUDClicked);
     
     if (SellZone)
-    {
         SellZone->TFTGameMode = TFTGameMode;
-    }
 }
 
 void UBoardWidget::BuildBoardGrid()
@@ -36,7 +34,6 @@ void UBoardWidget::BuildBoardGrid()
 
     BoardGrid->ClearChildren();
 
-    // Match battlefield dimensions
     int32 Columns = 4;
     int32 Rows    = 4;
 
@@ -44,18 +41,13 @@ void UBoardWidget::BuildBoardGrid()
     {
         for (int32 Col = 0; Col < Columns; Col++)
         {
-            UBoardCellWidget* Cell = CreateWidget<UBoardCellWidget>(
-                this, BoardCellClass);
-            
+            UBoardCellWidget* Cell = CreateWidget<UBoardCellWidget>(this, BoardCellClass);
             if (!Cell) continue;
 
             Cell->TFTGameMode = TFTGameMode;
             Cell->Col         = Col;
             Cell->Row         = Row;
 
-            // Add to grid at correct position
-            // BoardGrid->AddChildToUniformGrid(Cell, Row, Col);
-            
             UUniformGridSlot* GridSlot = BoardGrid->AddChildToUniformGrid(Cell, Row, Col);
             if (GridSlot)
             {
@@ -72,21 +64,17 @@ void UBoardWidget::BindDelegates()
 {
     if (!TFTGameMode) return;
 
-    // Refresh synergies when traits change
     if (UTraitSubsystem* Traits = GetGameInstance()->GetSubsystem<UTraitSubsystem>())
         Traits->OnTraitsUpdated.AddDynamic(this, &UBoardWidget::HandleTraitsUpdated);
 
-    // Refresh bench when a unit is bought
     if (TFTGameMode->ShopSS)
         TFTGameMode->ShopSS->OnUnitTransaction.AddDynamic(
             this, &UBoardWidget::HandleUnitTransaction);
-    
+
     if (TFTGameMode->PS)
     {
-        TFTGameMode->PS->OnUnitsMerged.AddDynamic(
-            this, &UBoardWidget::HandleUnitsMerged);
-        TFTGameMode->PS->OnUnitPlaced.AddDynamic(
-            this, &UBoardWidget::HandleUnitPlaced);
+        TFTGameMode->PS->OnUnitsMerged.AddDynamic(this, &UBoardWidget::HandleUnitsMerged);
+        TFTGameMode->PS->OnUnitPlaced.AddDynamic(this, &UBoardWidget::HandleUnitPlaced);
     }
 }
 
@@ -97,25 +85,18 @@ void UBoardWidget::RefreshSynergies()
     UTraitSubsystem* Traits = GetGameInstance()->GetSubsystem<UTraitSubsystem>();
     if (!Traits) return;
 
-    // Clear existing cards
     SynergyContainer->ClearChildren();
 
-    // Add a card for every trait the player has at least 1 unit in
+    // Only show traits the player currently has units contributing to
     for (const FActiveTraitStatus& Status : Traits->GetAllTraitStatuses())
     {
-        if (Status.CurrentCount == 0) continue; // skip traits with no units
+        if (Status.CurrentCount == 0) continue;
 
-        USynergyCard* Card = CreateWidget<USynergyCard>(
-            this, SynergyCardClass);
+        USynergyCard* Card = CreateWidget<USynergyCard>(this, SynergyCardClass);
         if (!Card) continue;
 
-        Card->SetData(
-            Status.DisplayName,
-            Status.CurrentCount,
-            Status.NextThreshold,
-            Status.bIsActive
-        );
-
+        Card->SetData(Status.DisplayName, Status.CurrentCount,
+            Status.NextThreshold, Status.bIsActive);
         SynergyContainer->AddChild(Card);
     }
 }
@@ -130,15 +111,14 @@ void UBoardWidget::RefreshBench()
 
     for (int32 i = 0; i < MaxBench; i++)
     {
-        UBoardCellWidget* Cell = CreateWidget<UBoardCellWidget>(
-            this, BoardCellClass);
+        UBoardCellWidget* Cell = CreateWidget<UBoardCellWidget>(this, BoardCellClass);
         if (!Cell) continue;
 
-        Cell->TFTGameMode   = TFTGameMode;
-        Cell->bIsBenchCell  = true;
+        Cell->TFTGameMode  = TFTGameMode;
+        Cell->bIsBenchCell = true;
         Cell->UnitCardClass = UnitCardClass;
 
-        // Place unit if one exists at this bench index
+        // Show unit card if a unit occupies this bench index
         if (TFTGameMode->PS->BenchUnits.IsValidIndex(i))
         {
             AUnit* Unit = TFTGameMode->PS->BenchUnits[i];
@@ -160,35 +140,45 @@ UBoardCellWidget* UBoardWidget::GetCellWidget(int32 Col, int32 Row)
 {
     if (!BoardGrid) return nullptr;
 
-    // Cells are added in Row-major order: index = Col + Row * Columns
-    int32 Columns = 4;
-    int32 Index   = Col + Row * Columns;
-
+    // Cells are added row-major: index = Col + Row * Columns
+    int32 Index = Col + Row * 4;
     return Cast<UBoardCellWidget>(BoardGrid->GetChildAt(Index));
-}
-
-void UBoardWidget::OnToggleHUDClicked()
-{
-    if (!TFTGameMode || !TFTGameMode->HUDWidget) return;
-
-    UTFTHUDWidget* HUD = TFTGameMode->HUDWidget;
-    
-    this->SetVisibility(ESlateVisibility::Hidden);
-    HUD->SetVisibility(ESlateVisibility::Visible);
 }
 
 void UBoardWidget::ClearCell(int32 Col, int32 Row)
 {
     UBoardCellWidget* Cell = GetCellWidget(Col, Row);
-    if (!Cell) return;
-
-    Cell->ClearUnit();
+    if (Cell) Cell->ClearUnit();
 }
+
+void UBoardWidget::RebuildOccupiedCells()
+{
+    if (!TFTGameMode->PS) return;
+
+    // Refresh unit cards for all units currently on the board
+    for (AUnit* Unit : TFTGameMode->PS->BoardUnits)
+    {
+        if (!Unit || Unit->GridCol < 0) continue;
+        UBoardCellWidget* Cell = GetCellWidget(Unit->GridCol, Unit->GridRow);
+        if (Cell) Cell->PlaceUnit(Unit);
+    }
+}
+
+void UBoardWidget::OnToggleHUDClicked()
+{
+    if (!TFTGameMode || !TFTGameMode->HUDWidget) return;
+    this->SetVisibility(ESlateVisibility::Hidden);
+    TFTGameMode->HUDWidget->SetVisibility(ESlateVisibility::Visible);
+}
+
+// -------------------------------------------------------
+// Delegate Handlers
+// -------------------------------------------------------
 
 void UBoardWidget::HandleUnitsMerged(int32 Col, int32 Row)
 {
+    // Clear the ghost card left by the destroyed unit then rebuild
     ClearCell(Col, Row);
-    
     RebuildOccupiedCells();
     RefreshBench();
 }
@@ -196,25 +186,10 @@ void UBoardWidget::HandleUnitsMerged(int32 Col, int32 Row)
 void UBoardWidget::HandleUnitPlaced(AUnit* PlacedUnit)
 {
     if (!PlacedUnit) return;
-
     UBoardCellWidget* Cell = GetCellWidget(PlacedUnit->GridCol, PlacedUnit->GridRow);
     if (Cell) Cell->PlaceUnit(PlacedUnit);
-
     RefreshBench();
     RefreshSynergies();
-}
-
-void UBoardWidget::RebuildOccupiedCells()
-{
-    if (!TFTGameMode->PS) return;
-    
-    for (AUnit* Unit : TFTGameMode->PS->BoardUnits)
-    {
-        if (!Unit || Unit->GridCol < 0) continue;
-        
-        UBoardCellWidget* Cell = GetCellWidget(Unit->GridCol, Unit->GridRow);
-        if (Cell) Cell->PlaceUnit(Unit);
-    }
 }
 
 void UBoardWidget::HandleTraitsUpdated()
@@ -224,6 +199,7 @@ void UBoardWidget::HandleTraitsUpdated()
 
 void UBoardWidget::HandleUnitTransaction(AUnit* NewUnit)
 {
+    // Called on buy or sell — rebuild everything that could have changed
     RefreshBench();
     RefreshSynergies();
     RebuildOccupiedCells();

@@ -58,10 +58,10 @@ public:
     // Returns seconds remaining in the prep phase
     float GetPrepTimeRemaining() const { return PrepTimeRemaining; }
     
-    // Returns seconds remaining in the prep phase
+    // Returns seconds remaining in the combat phase
     float GetCombatTimeRemaining() const { return CombatTimeRemaining; }
-    
-    // Returns seconds remaining in the prep phase
+
+    // Returns seconds remaining in the result phase
     float GetResultTimeRemaining() const { return ResultTimeRemaining; }
 
     // -------------------------------------------------------
@@ -86,11 +86,11 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
     float PrepDuration = 15.f;
     
-    // How long the prep phase lasts in seconds
+    // How long the combat phase lasts in seconds
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
     float CombatDuration = 30.f;
     
-    // How long the prep phase lasts in seconds
+    // How long the result phase lasts in seconds
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
     float ResultDuration = 5.f;
 

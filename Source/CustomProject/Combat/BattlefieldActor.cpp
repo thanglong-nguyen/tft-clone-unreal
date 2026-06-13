@@ -26,8 +26,11 @@ void ABattlefieldActor::InitGrids()
 }
 
 
+// Draw persistent debug lines outlining the player grid (green) 
+// and enemy grid (red) 
 void ABattlefieldActor::DrawBorder()
 {
+    
     // Player side grid lines
     for (int32 Row = 0; Row <= Rows/2; Row++)
     {
@@ -65,8 +68,8 @@ FVector ABattlefieldActor::GetPlayerCellPosition(int32 Col, int32 Row) const
 {
     FVector Origin = GetActorLocation();
     return Origin + FVector(
-        - (Row + 1 )* CellSize,                          // rows go forward/back (X)
-        (Col - Columns / 2.f) * CellSize,        // cols go left/right (Y)
+        -(Row + 1) * CellSize,           // negative X = player side
+        (Col - Columns / 2.f) * CellSize, // centered on Y axis
         0.f
     );
 }
@@ -75,8 +78,8 @@ FVector ABattlefieldActor::GetEnemyCellPosition(int32 Col, int32 Row) const
 {
     FVector Origin = GetActorLocation();
     return Origin + FVector(
-        (Row + 1) * CellSize,                       // enemy side negative X
-        (Col - Columns / 2.f) * CellSize,        // cols go left/right (Y)
+        (Row + 1) * CellSize,             // positive X = enemy side
+        (Col - Columns / 2.f) * CellSize, // centered on Y axis
         0.f
     );
 }

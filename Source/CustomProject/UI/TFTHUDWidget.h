@@ -14,6 +14,7 @@ class UHorizontalBox;
 class UShopSlotWidget;
 class ATFTGameMode;
 
+// Shows round, phase, timer, gold, level, XP, and the shop.
 UCLASS()
 class CUSTOMPROJECT_API UTFTHUDWidget : public UUserWidget
 {
@@ -27,65 +28,47 @@ public:
     ATFTGameMode* TFTGameMode;
 
     // -------------------------------------------------------
-    // Widget Bindings
-    // Variable names must match widget names exactly in WBP_HUD
+    // Widget Bindings 
     // -------------------------------------------------------
 
-    // Shows current round number
     UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
-    UTextBlock* RoundText;
+    UTextBlock* RoundText;      
 
-    // Shows current phase — PREP, COMBAT, RESULT
     UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
-    UTextBlock* PhaseText;
+    UTextBlock* PhaseText;      // PREP / COMBAT / RESULT
 
-    // Shows current gold amount
     UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
-    UTextBlock* GoldText;
+    UTextBlock* GoldText;       
 
-    // Shows current player level
     UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
-    UTextBlock* LevelText;
+    UTextBlock* LevelText;      
 
-    // Shows current XP progress e.g. "4 / 10" or "MAX"
     UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
-    UTextBlock* XPText;
+    UTextBlock* XPText;         
 
-    // Decreasing bar showing time remaining in current phase
     UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
-    UProgressBar* TimerBar;
+    UProgressBar* TimerBar;     
 
-    // Horizontal container holding the shop slot widgets
     UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
-    UHorizontalBox* ShopContainer;
-    
+    UHorizontalBox* ShopContainer; 
+
     UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
     UButton* RerollButton;
 
     UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
     UButton* BuyXPButton;
-    
+
     UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
     UButton* ToggleBoardButton;
-    
-    UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
-    UTextBlock* RerollText; 
-    
-    UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
-    UTextBlock* BuyXPText; 
-    
-    UFUNCTION()
-    void OnRerollClicked();
 
-    UFUNCTION()
-    void OnBuyXPClicked();
-    
-    UFUNCTION()
-    void OnToggleBoardClicked();
+    UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+    UTextBlock* RerollText;
+
+    UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+    UTextBlock* BuyXPText;
 
     // -------------------------------------------------------
-    // Update Functions
-    // Each one reads from cached subsystems and sets widget text
+    // Update Functions — read from TFTGameMode and set widget text
     // -------------------------------------------------------
 
     void UpdateGold();
@@ -97,16 +80,24 @@ public:
     // Loops ShopContainer children and refreshes each slot widget
     void RefreshShopSlots();
 
+    UFUNCTION()
+    void OnRerollClicked();
+
+    UFUNCTION()
+    void OnBuyXPClicked();
+
+    UFUNCTION()
+    void OnToggleBoardClicked();
+
 private:
     // Subscribes to subsystem delegates so UI auto-updates on events
     void BindDelegates();
 
-    // Pushes current game state to all widgets on startup
+    // Pushes current game state to all widgets on first load
     void PushInitialState();
 
     // -------------------------------------------------------
-    // Delegate Handlers
-    // Bound in BindDelegates — fire when subsystems broadcast
+    // Delegate Handlers — bound in BindDelegates
     // -------------------------------------------------------
 
     UFUNCTION()
@@ -120,11 +111,4 @@ private:
 
     UFUNCTION()
     void HandleLevelUp(int32 NewLevel, int32 BoardCapacity);
-
-    // -------------------------------------------------------
-    // Cached References
-    // Set once in NativeConstruct — avoids repeated lookups
-    // -------------------------------------------------------
-
-    
 };

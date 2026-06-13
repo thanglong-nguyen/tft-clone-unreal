@@ -17,48 +17,43 @@ void ATFTGameMode::BeginPlay()
 
 void ATFTGameMode::StartGame()
 {
-    
+    // Setup data before caching subsystems so pool is ready
     SetupShop();
     SetupBenchPositions();
-    
-    // Cache subsystem and player state references once
-    // All update functions use these cached pointers
+
+    // Cache all subsystems once — everything else accesses them through TFTGameMode
     UGameInstance* GI = GetGameInstance();
     CombatSS = GI->GetSubsystem<UCombatSubsystem>();
     ShopSS   = GI->GetSubsystem<UShopSubsystem>();
-    TraitSS = GetGameInstance()->GetSubsystem<UTraitSubsystem>();
-    
+    TraitSS  = GI->GetSubsystem<UTraitSubsystem>();
+
+    // Spawn the battlefield actor at world origin
     FActorSpawnParameters Params;
     Battlefield = GetWorld()->SpawnActor<ABattlefieldActor>(
         ABattlefieldActor::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, Params);
-    
+
+    // Cache player state and pipe this back so PS can access all systems
     if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
         PS = PC->GetPlayerState<ATFTPlayerState>();
-    
+
     if (PS)
     {
         PS->TFTGameMode = this;
-        PS->AddGold(10);
+        PS->AddGold(10); // starting gold
     }
-    
-    if (TraitSS)
-    {
-        TraitSS->TFTGameMode = this;
-    }
-    
-    
-    if (ShopSS)
-    {
-        ShopSS->TFTGameMode = this;
-    }
-    
+
+    // Pipe TFTGameMode into all subsystems
+    if (TraitSS) TraitSS->TFTGameMode = this;
+    if (ShopSS)  ShopSS->TFTGameMode  = this;
+
     if (CombatSS)
     {
         CombatSS->TFTGameMode = this;
         CombatSS->OnPhaseChanged.AddDynamic(this, &ATFTGameMode::OnPhaseChanged);
         CombatSS->StartPrepPhase();
     }
-    
+
+    // Create board widget — hidden by default, toggled by player
     if (BoardWidgetClass)
     {
         if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
@@ -73,6 +68,7 @@ void ATFTGameMode::StartGame()
         }
     }
 
+    // Create HUD — always visible
     if (HUDWidgetClass)
     {
         if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
@@ -93,36 +89,34 @@ void ATFTGameMode::SetupShop()
     UShopSubsystem* Shop = GetGameInstance()->GetSubsystem<UShopSubsystem>();
     if (!Shop) return;
 
+    // Register all available unit data assets with the shop pool
     for (UUnitDataAsset* Unit : AvailableUnits)
-    {
         if (Unit) Shop->AllUnits.Add(Unit);
-    }
-    
-    Shop->FreeRefresh(1); 
+
+    // Generate the first shop for free
+    Shop->FreeRefresh(1);
 }
 
 void ATFTGameMode::SetupBenchPositions()
 {
     int Slots = 5;
-    BenchSlots.Init(false, Slots);
+    BenchSlots.Init(false, Slots); // all slots start empty
     float Spacing = 200.f;
-
-    // Draw bench grid lines
-    UWorld* World = GetWorld();
     float HalfCell = Spacing * 0.5f;
+    UWorld* World = GetWorld();
 
+    // Draw vertical dividers between bench slots
     for (int32 i = 0; i <= Slots; i++)
     {
-        // Vertical lines — separating each bench slot
         FVector Start = BenchOrigin + FVector(-HalfCell, i * Spacing - HalfCell, 1.f);
-        FVector End   = BenchOrigin + FVector(HalfCell,  i * Spacing - HalfCell, 1.f);
+        FVector End   = BenchOrigin + FVector( HalfCell, i * Spacing - HalfCell, 1.f);
         DrawDebugLine(World, Start, End, FColor::Yellow, true, -1.f, 0, 2.f);
     }
 
-    // Top and bottom horizontal lines
-    FVector TopLeft     = BenchOrigin + FVector(HalfCell,  -HalfCell,            1.f);
-    FVector TopRight    = BenchOrigin + FVector(HalfCell,   Slots * Spacing - HalfCell, 1.f);
-    FVector BottomLeft  = BenchOrigin + FVector(-HalfCell, -HalfCell,            1.f);
+    // Draw top and bottom border lines
+    FVector TopLeft     = BenchOrigin + FVector( HalfCell, -HalfCell,                   1.f);
+    FVector TopRight    = BenchOrigin + FVector( HalfCell,  Slots * Spacing - HalfCell, 1.f);
+    FVector BottomLeft  = BenchOrigin + FVector(-HalfCell, -HalfCell,                   1.f);
     FVector BottomRight = BenchOrigin + FVector(-HalfCell,  Slots * Spacing - HalfCell, 1.f);
 
     DrawDebugLine(World, TopLeft,    TopRight,    FColor::Yellow, true, -1.f, 0, 2.f);
@@ -138,7 +132,7 @@ int32 ATFTGameMode::GetNextFreeBenchSlot() const
 {
     for (int32 i = 0; i < BenchSlots.Num(); i++)
         if (!BenchSlots[i]) return i;
-    return -1;
+    return -1; // bench full
 }
 
 void ATFTGameMode::OccupyBenchSlot(int32 Index)
@@ -155,61 +149,43 @@ void ATFTGameMode::FreeBenchSlot(int32 Index)
 
 void ATFTGameMode::ShowMessage(const FString& Message, float Duration, FLinearColor Color)
 {
+    // -1 key means each call adds a new message rather than replacing the previous one
     if (GEngine)
-    {
-        GEngine->AddOnScreenDebugMessage(
-            -1,        // key — -1 means new message each time
-            Duration,  // how long it stays
-            Color.ToFColor(true),
-            Message
-        );
-    }
+        GEngine->AddOnScreenDebugMessage(-1, Duration, Color.ToFColor(true), Message);
 }
 
 void ATFTGameMode::OnPhaseChanged(EGamePhase NewPhase)
 {
-    
     switch (NewPhase)
     {
         case EGamePhase::Prep:
-        
-            for (AUnit* Unit: PS->BoardUnits)
-            {
-                PS->CheckForMerge(Unit->UnitName);
-            }
-        
-            for (AUnit* Unit: PS->BenchUnits)
-            {
-                PS->CheckForMerge(Unit->UnitName);
-            }
-        
-            break;
-        
-        
-        case EGamePhase::Combat:
-        
-            if (!CombatSS || !Battlefield) return;
-        
-            if (!PS) return;
-        
+            // Check merges for all units in case new copies were acquired last round
             for (AUnit* Unit : PS->BoardUnits)
-            {
+                PS->CheckForMerge(Unit->UnitName);
+            for (AUnit* Unit : PS->BenchUnits)
+                PS->CheckForMerge(Unit->UnitName);
+            break;
+
+        case EGamePhase::Combat:
+        {
+            if (!CombatSS || !Battlefield || !PS) return;
+
+            // Register all board units with combat subsystem
+            for (AUnit* Unit : PS->BoardUnits)
                 CombatSS->RegisterPlayerUnit(Unit);
-            }
-        
+
+            // Auto-fill remaining board slots from bench before combat starts
             while (PS->CanPlaceOnBoard() && PS->BenchUnits.Num() > 0)
             {
                 for (AUnit* Unit : PS->BenchUnits)
                 {
                     PS->TryAutoPlace(Unit);
                     if (PS->BoardUnits.Contains(Unit))
-                    {
                         CombatSS->RegisterPlayerUnit(Unit);
-                    }
                 }
             }
 
-            // Spawn enemies from pool
+            // Spawn enemies and assign them to grid cells
             for (int32 i = 0; i < EnemyUnitPool.Num(); i++)
             {
                 UUnitDataAsset* Data = EnemyUnitPool[i];
@@ -222,31 +198,30 @@ void ATFTGameMode::OnPhaseChanged(EGamePhase NewPhase)
                 Params.SpawnCollisionHandlingOverride =
                     ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
-                // Spawn off screen — CombatSubsystem will move them on combat start
+                // Spawn off screen — CombatSubsystem moves them to grid on combat start
                 AUnit* Enemy = GetWorld()->SpawnActor<AUnit>(
                     AUnit::StaticClass(), FVector(0.f, 0.f, -1000.f),
                     FRotator::ZeroRotator, Params);
 
                 if (!Enemy) continue;
 
-                Enemy->DataAsset = Data;
+                Enemy->DataAsset       = Data;
                 Enemy->StateWidgetClass = StateWidgetClass;
                 Enemy->InitFromDataAsset();
                 Enemy->SetStateWidget();
-                
+
+                // Red health bar to distinguish enemies from player units
                 if (Enemy->StateWidget)
-                {
-                    FLinearColor HealthColor = FLinearColor::Red;
-                    Enemy->StateWidget->HealthBar->SetFillColorAndOpacity(HealthColor);
-                }
-                
+                    Enemy->StateWidget->HealthBar->SetFillColorAndOpacity(FLinearColor::Red);
+
                 Enemy->GridCol = Col;
                 Enemy->GridRow = Row;
                 Battlefield->OccupyEnemyCell(Col, Row);
                 CombatSS->RegisterEnemyUnit(Enemy);
             }
             break;
-        
+        }
+
         case EGamePhase::Result:
             break;
     }

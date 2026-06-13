@@ -6,6 +6,7 @@
 class UTextBlock;
 class UProgressBar;
 
+// Displays a single trait's name, current count, and active status.
 UCLASS()
 class CUSTOMPROJECT_API USynergyCard : public UUserWidget
 {

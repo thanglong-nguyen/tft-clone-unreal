@@ -17,6 +17,8 @@ enum class EUnitState : uint8
     Dead        // HP reached 0
 };
 
+// Base class for all units — player and enemy alike.
+// Handles combat behaviour, stat loading, and health bar widget.
 UCLASS()
 class CUSTOMPROJECT_API AUnit : public ACharacter
 {
@@ -33,7 +35,7 @@ public:
     // -------------------------------------------------------
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Unit")
-    TObjectPtr<UUnitDataAsset> DataAsset;
+    UUnitDataAsset* DataAsset;
 
     // Loads all stats and mesh from the assigned DataAsset
     // Called automatically in BeginPlay and ResetForNewRound
@@ -103,7 +105,7 @@ public:
 
     // The unit this one is currently targeting
     UPROPERTY(BlueprintReadOnly, Category="Combat")
-    TObjectPtr<AUnit> CurrentTarget;
+    AUnit* CurrentTarget = nullptr;
     
     
     // Stores which grid cell this unit occupies

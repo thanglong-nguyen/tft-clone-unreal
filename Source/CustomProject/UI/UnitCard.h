@@ -7,6 +7,9 @@ class UTextBlock;
 class UImage;
 class AUnit;
 
+// Draggable card widget representing a single unit.
+// Used in both board cells and bench cells.
+// Initiates a UUnitDragDrop operation on left mouse drag.
 UCLASS()
 class CUSTOMPROJECT_API UUnitCard : public UUserWidget
 {
@@ -16,16 +19,15 @@ public:
     UPROPERTY()
     AUnit* Unit = nullptr;
 
-    // Whether this card is on the board or bench
-    // Affects drag behaviour
+    // True if this card is sitting on the board — affects drag drop behaviour
     UPROPERTY(BlueprintReadWrite)
     bool bOnBoard = false;
 
-    // Populate card with unit data
+    // Populates all text and tints the background based on star level
     void SetUnit(AUnit* InUnit, bool bIsOnBoard);
 
     // -------------------------------------------------------
-    // Widget Bindings — match WBP_UnitCard exactly
+    // Widget Bindings 
     // -------------------------------------------------------
 
     UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
@@ -35,14 +37,12 @@ public:
     UTextBlock* StarText;
 
     UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
-    UTextBlock* CostText;
+    UTextBlock* CostText;   
 
-    // Card background — color changes by rarity/star level
     UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
-    UImage* CardBackground;
+    UImage* CardBackground; // grey=1★, blue=2★, gold=3★
 
 protected:
-    // Draggable from both bench and board
     virtual FReply NativeOnMouseButtonDown(
         const FGeometry& InGeometry,
         const FPointerEvent& InMouseEvent) override;

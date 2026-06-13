@@ -4,6 +4,7 @@
 #include "GameplayTagContainer.h"
 #include "TraitSubsystem.generated.h"
 
+class UTraitDataAsset;
 class ATFTGameMode;
 class AUnit;
 
@@ -19,7 +20,7 @@ struct FActiveTraitStatus
     FGameplayTag TraitTag;
     
     UPROPERTY(BlueprintReadOnly)
-    FString DisplayName;
+    FString DisplayName; // human readable name e.g. "Warrior", "Elf"
     
     UPROPERTY(BlueprintReadOnly)
     int32 CurrentCount = 0;
@@ -56,7 +57,7 @@ public:
     
     // Contains all trait definitions and their tier thresholds
     UPROPERTY(BlueprintReadWrite, Category="Traits")
-    TObjectPtr<class UTraitDataAsset> TraitData;
+    UTraitDataAsset* TraitData;
 
     // -------------------------------------------------------
     // Public Interface
@@ -85,6 +86,7 @@ public:
 
 private:
 
+    // Maps each trait tag to how many unique units on the board have it
     TMap<FGameplayTag, int32> TraitCounts;
 
     // Counts unique trait contributions from board units

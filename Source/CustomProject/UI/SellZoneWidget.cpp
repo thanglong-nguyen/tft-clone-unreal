@@ -9,24 +9,21 @@ bool USellZoneWidget::NativeOnDragOver(
 	const FDragDropEvent& InDragDropEvent,
 	UDragDropOperation* InOperation)
 {
-	if (Cast<UUnitDragDrop>(InOperation))
-	{
-		// Turn red when hovering with a unit
-		if (SellBackground)
-			SellBackground->SetColorAndOpacity(
-				FLinearColor(1.f, 0.f, 0.f, 0.6f));
-		return true;
-	}
-	return false;
+	if (!Cast<UUnitDragDrop>(InOperation)) return false;
+
+	// Brighten to signal this is a valid drop target
+	if (SellBackground)
+		SellBackground->SetColorAndOpacity(FLinearColor(1.f, 0.f, 0.f, 0.6f));
+	return true;
 }
 
 void USellZoneWidget::NativeOnDragLeave(
 	const FDragDropEvent& InDragDropEvent,
 	UDragDropOperation* InOperation)
 {
+	// Dim back to resting state
 	if (SellBackground)
-		SellBackground->SetColorAndOpacity(
-			FLinearColor(1.f, 0.f, 0.f, 0.2f));
+		SellBackground->SetColorAndOpacity(FLinearColor(1.f, 0.f, 0.f, 0.2f));
 }
 
 bool USellZoneWidget::NativeOnDrop(
@@ -36,14 +33,15 @@ bool USellZoneWidget::NativeOnDrop(
 {
 	UUnitDragDrop* DragOp = Cast<UUnitDragDrop>(InOperation);
 	if (!DragOp || !DragOp->DraggedUnit || !TFTGameMode) return false;
-	
-	if (TFTGameMode->CombatSS->GetCurrentPhase() != EGamePhase::Prep && DragOp->DraggedUnit->GridCol >=0)
+
+	// Prevent selling units that are actively fighting on the battlefield
+	if (TFTGameMode->CombatSS->GetCurrentPhase() != EGamePhase::Prep
+		&& DragOp->DraggedUnit->GridCol >= 0)
 	{
-		TFTGameMode->ShowMessage(TEXT("Can't sell combating units"), 
-	2.f, FLinearColor::Yellow);
+		TFTGameMode->ShowMessage(TEXT("Can't sell combating units"),
+			2.f, FLinearColor::Yellow);
 		return false;
 	}
-	
 
 	UShopSubsystem* Shop = TFTGameMode->ShopSS;
 	if (!Shop) return false;

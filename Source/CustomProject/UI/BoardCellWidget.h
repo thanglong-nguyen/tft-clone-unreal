@@ -10,6 +10,9 @@ class UUnitCard;
 class AUnit;
 class UDragDropOperation;
 
+// Represents a single cell on the board or bench grid.
+// Handles drag and drop — units can be dragged in, out, or to the sell zone.
+// bIsBenchCell determines whether drops move units to board or bench.
 UCLASS()
 class CUSTOMPROJECT_API UBoardCellWidget : public UUserWidget
 {
@@ -17,32 +20,32 @@ class CUSTOMPROJECT_API UBoardCellWidget : public UUserWidget
 
 public:
     UPROPERTY()
-    ATFTGameMode* TFTGameMode = nullptr;
+    ATFTGameMode* TFTGameMode;
 
+    // Grid coordinates — used to map this widget to a battlefield cell
     UPROPERTY(BlueprintReadWrite)
     int32 Col = 0;
 
     UPROPERTY(BlueprintReadWrite)
     int32 Row = 0;
 
-    
+    // If true dropping a unit here sends it to bench instead of board
     UPROPERTY(BlueprintReadWrite)
     bool bIsBenchCell = false;
 
     // -------------------------------------------------------
-    // Widget Bindings
+    // Widget Bindings — names must match WBP_BoardCell exactly
     // -------------------------------------------------------
 
-    // Cell background — tints on hover/occupied
+    // Tints on hover and when occupied
     UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
     UImage* CellBackground;
 
-    // Slot that holds the unit card when occupied
-    // Empty overlay when no unit
+    // Holds the unit card widget when a unit occupies this cell
     UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
     UOverlay* CardSlot;
 
-    // Class to spawn for unit cards — set in WBP_BoardCell details
+    // Set in WBP_BoardCell details panel
     UPROPERTY(EditAnywhere, Category="Board")
     TSubclassOf<class UUnitCard> UnitCardClass;
 
@@ -50,16 +53,16 @@ public:
     // Functions
     // -------------------------------------------------------
 
-    // Place a unit card in this cell
+    // Spawns a UnitCard into CardSlot and tints the background
     void PlaceUnit(AUnit* Unit);
 
-    // Remove the unit card from this cell
+    // Clears the CardSlot and resets background tint
     void ClearUnit();
 
+    // Tints green on hover, resets on leave
     void SetHighlight(bool bHighlight);
 
 protected:
-
     virtual bool NativeOnDrop(
         const FGeometry& InGeometry,
         const FDragDropEvent& InDragDropEvent,

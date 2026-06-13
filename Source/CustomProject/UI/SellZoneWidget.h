@@ -6,6 +6,7 @@
 class ATFTGameMode;
 class UImage;
 
+// Drop target widget — dragging a unit onto this sells it for gold.
 UCLASS()
 class CUSTOMPROJECT_API USellZoneWidget : public UUserWidget
 {
@@ -15,6 +16,7 @@ public:
 	UPROPERTY()
 	ATFTGameMode* TFTGameMode = nullptr;
 
+	// Background image — tints brighter red when a unit is dragged over
 	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
 	UImage* SellBackground;
 

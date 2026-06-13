@@ -50,24 +50,19 @@ void UTraitSubsystem::RecalculateTraits(const TArray<AUnit*>& BoardUnits)
 
 void UTraitSubsystem::CountTraits(const TArray<AUnit*>& BoardUnits)
 {
-    // Track which unit names have already been counted
     TSet<FName> CountedNames;
 
     for (AUnit* Unit : BoardUnits)
     {
-        // Skip invalid or already counted units
+        if (!Unit || !Unit->DataAsset) continue;
+
+        // Each unique unit type only contributes once
+        // Prevents copies of the same unit from incrementing the trait count
         if (CountedNames.Contains(Unit->UnitName)) continue;
-        if (!Unit->DataAsset) continue;
-        
-        
         CountedNames.Add(Unit->UnitName);
 
-        // Increment count for race and class tags
-        FGameplayTag RaceTag  = Unit->DataAsset->Race;
-        FGameplayTag ClassTag = Unit->DataAsset->Class;
-
-        TraitCounts.FindOrAdd(RaceTag)++;
-        TraitCounts.FindOrAdd(ClassTag)++;
+        TraitCounts.FindOrAdd(Unit->DataAsset->Race)++;
+        TraitCounts.FindOrAdd(Unit->DataAsset->Class)++;
     }
 }
 
@@ -104,11 +99,10 @@ void UTraitSubsystem::ApplyTraitBuffs(const TArray<AUnit*>& BoardUnits)
 
 void UTraitSubsystem::StripTraitBuffs(const TArray<AUnit*>& BoardUnits)
 {
-    // Reset every unit to base stats from their data asset
+    // Reinitialise from data asset to wipe any previously applied buffs
+    // This ensures buffs never stack across multiple RecalculateTraits calls
     for (AUnit* Unit : BoardUnits)
-    {
         if (Unit) Unit->InitFromDataAsset();
-    }
 }
 
 // -------------------------------------------------------

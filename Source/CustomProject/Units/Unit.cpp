@@ -55,14 +55,14 @@ void AUnit::InitFromDataAsset()
 {
     if (!DataAsset) return;
 
-    // Copy base stats from the data asset
-    UnitName     = DataAsset->UnitName;
-    Cost         = DataAsset->Cost;
-    
+    UnitName = DataAsset->UnitName;
+    Cost     = DataAsset->Cost;
+
+    // Load stats from the correct star tier — fallback to tier 1 if missing
     const FUnitStarTier* Tier = DataAsset->GetStarTier(StarLevel);
-    if (!Tier) Tier = DataAsset->GetStarTier(1); 
-    if (!Tier) return; 
-    
+    if (!Tier) Tier = DataAsset->GetStarTier(1);
+    if (!Tier) return;
+
     MaxHP        = Tier->BaseHP;
     CurrentHP    = Tier->BaseHP;
     AttackDamage = Tier->BaseAttack;
@@ -72,7 +72,6 @@ void AUnit::InitFromDataAsset()
 
     GetCharacterMovement()->MaxWalkSpeed = DataAsset->MoveSpeed;
 
-    // Apply the mesh defined in the data asset
     if (DataAsset->Mesh && GetMesh())
     {
         GetMesh()->SetSkeletalMesh(DataAsset->Mesh);
