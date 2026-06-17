@@ -35,7 +35,7 @@ Collect three copies of the same unit to automatically merge them into a single 
 <table>
   <tr>
     <td align="center"><img src="assets/merge1.png" width="400"/><br/><sub>A unit being upgraded to the next star level</sub></td>
-    <td align="center"><img src="assets/merge2.png" width="400"/><br/><sub>Full progression from 1-star to 3-star</sub></td>
+    <td align="center"><img src="assets/merge2.png" width="400"/><br/><sub>units from 1-star to 3-star</sub></td>
   </tr>
 </table>
 
@@ -90,9 +90,6 @@ Units are data-driven via `UUnitDataAsset` — each unit type's stats, mesh, cos
 
 - **Unreal Engine 5.7**
 - **C++** for all gameplay logic and subsystems
-- **UMG / Slate** for UI (drag-drop, synergy cards, shop slots, HUD)
-- **GameplayTags** for trait identification
-- **Unreal Navigation System** for unit pathing
 
 ---
 
